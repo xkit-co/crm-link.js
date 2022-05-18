@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "jsx": "react",
+    "noImplicitAny": true,
+    "lib": ["DOM", "DOM.Iterable", "ESNext", "ScriptHost"],
+    "target": "es5",
+    "allowJs": false,
+    "skipLibCheck": true,
+    "strictNullChecks": true
+  },
+  "include": ["src/**/*", "typings/*.ts"],
+  "exclude": ["node_modules", ".parcel-cache", "dist"]
+}

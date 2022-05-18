@@ -1,0 +1,74 @@
+{
+  "name": "@xkit-co/xkit-crm-link-react.js",
+  "version": "1.0.0",
+  "description": "CRM integrations on your application via XKit",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xkit-co/xkit-crm-link-react.js.git"
+  },
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">= 14"
+  },
+  "targets": {
+    "static": {
+      "distDir": "../../priv/static/xkit-crm-link-js",
+      "publicUrl": "/xkit-crm-link-js",
+      "engines": {
+        "browsers": "> 0.5%, last 2 versions, not dead"
+      }
+    },
+    "publish": {
+      "isLibrary": true,
+      "distDir": "./dist"
+    }
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "chokidar \"src/**/*.tsx\" \"src/**/*.ts\" \"src/**/*.css\" --silent --initial -c \"rm -rf ../../priv/static/xkit-crm-link-js && parcel build --no-cache src/browser.ts --target static\"",
+    "lib:build": "rm -rf dist && tsc --noEmit && parcel build --no-cache src/index.tsx --reporter @parcel/reporter-bundle-analyzer --target publish",
+    "browser:build": "rm -rf ../../priv/static/xkit-crm-link-js && tsc --noEmit && parcel build --no-cache src/browser.ts --reporter @parcel/reporter-bundle-analyzer --target static",
+    "types": "tsc --emitDeclarationOnly --declaration --outDir temp && mv temp/index.d.ts dist/index.d.ts && rm -rf temp",
+    "test": "tsc --noEmit",
+    "prepublishOnly": "npm run lib:build && npm run types",
+    "repo": "echo $npm_package_repository_url",
+    "lint": "eslint . --ext js,jsx,ts,tsx",
+    "format-check": "prettier \"src/**/*.{js,jsx,ts,tsx}\" --check"
+  },
+  "devDependencies": {
+    "@parcel/config-default": "^2.5.0",
+    "@parcel/packager-ts": "2.5.0",
+    "@parcel/reporter-bundle-analyzer": "^2.5.0",
+    "@parcel/transformer-typescript-types": "2.5.0",
+    "@types/react": "^18.0.8",
+    "@types/react-dom": "^18.0.3",
+    "@typescript-eslint/eslint-plugin": "^5.22.0",
+    "@typescript-eslint/parser": "^5.22.0",
+    "chokidar-cli": "^3.0.0",
+    "eslint": "^8.14.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-react": "^7.28.0",
+    "eslint-plugin-react-hooks": "^4.3.0",
+    "parcel": "^2.5.0",
+    "parcel-transformer-css-to-string": "^0.9.1",
+    "postcss": "^8.4.13",
+    "prettier": "^2.6.2",
+    "react": "^18.1.0",
+    "react-dom": "^18.1.0",
+    "tailwindcss": "^3.0.24",
+    "typescript": "^4.6.4"
+  },
+  "peerDependencies": {
+    "react": "16.9.0 - 18",
+    "react-dom": "16.9.0 - 18"
+  },
+  "dependencies": {
+    "@xkit-co/xkit.js": "^3.12.2"
+  }
+}
