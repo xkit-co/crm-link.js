@@ -3,33 +3,50 @@ import React, { FC } from 'react'
 
 interface CRMConnectorProps {
   connector: Connector
+  lastItem: boolean
   connect: (connector: Connector) => Promise<void>
 }
 
-const CRMConnectorGridItem: FC<{ connector: Connector }> = ({ connector }) => (
-  <>
-    <div className='w-12 h-12'>
-      <img
-        className='block w-full'
-        src={connector.mark_url}
-        alt={connector.name}
-      />
-    </div>
-    <div className='text-xs text-center overflow-hidden whitespace-nowrap text-ellipsis'>
-      {connector.name}
-    </div>
-  </>
-)
-
-const CRMConnector: FC<CRMConnectorProps> = ({ connector, connect }) => {
+const CRMConnector: FC<CRMConnectorProps> = ({
+  connector,
+  lastItem,
+  connect
+}) => {
   return (
     <div
-      className='box-border border border-solid border-neutral-200 p-1.5 w-24 h-24 hover:bg-black/5 rounded cursor-pointer flex flex-col justify-center items-center'
+      className={[
+        'box-border',
+        'border-t',
+        'border-r-0',
+        'border-l-0',
+        'border-solid',
+        'border-neutral-200',
+        'px-5',
+        'py-3',
+        'hover:bg-black/5',
+        'cursor-pointer',
+        'flex',
+        'gap-4',
+        'justify-start',
+        'items-center',
+        lastItem ? 'border-b' : 'border-b-0'
+      ]
+        .join(' ')
+        .trim()}
       onClick={() => {
         connect(connector)
       }}
     >
-      <CRMConnectorGridItem connector={connector} />
+      <div className='w-12 h-12 shrink-0'>
+        <img
+          className='block w-full'
+          src={connector.mark_url}
+          alt={connector.name}
+        />
+      </div>
+      <div className='text-sm text-center overflow-hidden whitespace-nowrap text-ellipsis'>
+        {connector.name}
+      </div>
     </div>
   )
 }

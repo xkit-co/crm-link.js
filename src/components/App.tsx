@@ -3,6 +3,7 @@ import React, { FC, useCallback, useEffect, useState } from 'react'
 import { friendlyMessage } from '../errors'
 import { Screen } from '../interfaces/screen.interface'
 import { xkitLibWindow } from '../interfaces/window.interface'
+import Cross from './icons/Cross'
 import ModalScreens from './ModalScreens'
 
 declare const window: xkitLibWindow
@@ -93,11 +94,6 @@ const App: FC<AppProps> = ({ visible, token, resolve, reject }) => {
         ]
           .join(' ')
           .trim()}
-        onClick={(event) => {
-          if (event.target === event.currentTarget) {
-            reject('Modal was closed without adding a connection.')
-          }
-        }}
       >
         <div
           className={[
@@ -115,11 +111,20 @@ const App: FC<AppProps> = ({ visible, token, resolve, reject }) => {
             .join(' ')
             .trim()}
         >
+          <div className='flex justify-end items-center box-border p-2.5 w-full'>
+            {screen === Screen.Connecting ? ( // We don't want to show the exit button when the authorization popup is open
+              <div className='w-5 h-5 block'></div>
+            ) : (
+              <Cross
+                className='w-5 h-5 block cursor-pointer'
+                onClick={() => {
+                  reject('Modal was closed without adding a connection.')
+                }}
+              />
+            )}
+          </div>
           <ModalScreens
             screen={screen}
-            closeModal={() => {
-              reject('Modal was closed without adding a connection.')
-            }}
             connectors={connectors}
             currentConnector={currentConnector}
             connect={connect}
