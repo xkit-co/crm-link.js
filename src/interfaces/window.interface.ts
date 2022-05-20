@@ -4,9 +4,7 @@ export interface xkitLibWindow extends Window {
   xkit: XkitJs
 }
 
-export interface xkitBrowserWindow extends Window {
+export interface xkitBrowserWindow extends xkitLibWindow {
   linkCRM: (token: string) => void
-  xkit: {
-    init: (domain: string) => void
-  }
+  createXkit: (domain: string) => void
 }
