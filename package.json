@@ -33,7 +33,7 @@
     "types": "tsc --emitDeclarationOnly --declaration --outDir temp && mv temp/index.d.ts dist/index.d.ts && rm -rf temp",
     "test": "tsc --noEmit",
     "prepublishOnly": "npm run build && npm run types",
-    "repo": "echo $npm_package_repository_url",
+    "repo": "echo https://github.com/xkit-co/crm-link.js.git",
     "lint": "eslint . --ext js,jsx,ts,tsx",
     "format-check": "prettier \"src/**/*.{js,jsx,ts,tsx}\" --check"
   },
