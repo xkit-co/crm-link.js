@@ -1,23 +1,21 @@
-import { Connection, Connector } from '@xkit-co/xkit.js'
+import { Connection, Connector, XkitJs } from '@xkit-co/xkit.js'
 import React, { FC, useCallback, useEffect, useState } from 'react'
 import { friendlyMessage } from '../errors'
 import { Screen } from '../interfaces/screen.interface'
-import { xkitLibWindow } from '../interfaces/window.interface'
 import Cross from './icons/Cross'
 import ModalScreens from './ModalScreens'
-
-declare const window: xkitLibWindow
 
 interface AppProps {
   visible: boolean
   token: string | undefined
+  xkit: XkitJs | undefined
   resolve: (connection: Connection) => void
   reject: (message: string) => void
 }
 
 const CRMList = ['salesforce']
 
-const App: FC<AppProps> = ({ visible, token, resolve, reject }) => {
+const App: FC<AppProps> = ({ visible, token, xkit, resolve, reject }) => {
   const [screen, setScreen] = useState<Screen>(Screen.Loading)
   const [connectors, setConnectors] = useState<Connector[]>([])
   const [currentConnector, setCurrentConnector] = useState<
@@ -25,11 +23,11 @@ const App: FC<AppProps> = ({ visible, token, resolve, reject }) => {
   >(undefined)
 
   const connect = async (connector: Connector) => {
-    if (window.xkit && window.xkit.domain) {
+    if (xkit && xkit.domain) {
       try {
         setCurrentConnector(connector)
         setScreen(Screen.Connecting)
-        const connection = await window.xkit.addConnection(connector.slug)
+        const connection = await xkit.addConnection(connector.slug)
         return resolve(connection)
       } catch (error) {
         return reject(friendlyMessage(error.message))
@@ -40,16 +38,16 @@ const App: FC<AppProps> = ({ visible, token, resolve, reject }) => {
   }
 
   const fetchCRMs = useCallback(
-    async (token: string) => {
+    async (token: string, xkit: XkitJs) => {
       try {
-        await window.xkit.login(token)
+        await xkit.login(token)
       } catch (error) {
         return reject('Could not login with token provided.')
       }
 
       let connectors: Connector[] = []
       try {
-        connectors = await window.xkit.listConnectors()
+        connectors = await xkit.listConnectors()
       } catch (error) {
         return reject('Could not load available CRMs.')
       }
@@ -68,13 +66,13 @@ const App: FC<AppProps> = ({ visible, token, resolve, reject }) => {
   )
 
   useEffect(() => {
-    if (visible && token) {
-      fetchCRMs(token)
+    if (visible && token && xkit) {
+      fetchCRMs(token, xkit)
     } else {
       setCurrentConnector(undefined)
     }
     setScreen(Screen.Loading)
-  }, [visible, token, fetchCRMs])
+  }, [visible, token, xkit, fetchCRMs])
 
   return (
     <>
