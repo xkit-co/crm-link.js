@@ -1,6 +1,6 @@
 {
   "name": "@xkit-co/crm-link.js",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "CRM integrations on your application via XKit",
   "repository": {
     "type": "git",
@@ -57,8 +57,6 @@
     "parcel-transformer-css-to-string": "^0.9.1",
     "postcss": "^8.4.13",
     "prettier": "^2.6.2",
-    "react": "^18.1.0",
-    "react-dom": "^18.1.0",
     "tailwindcss": "^3.0.24",
     "typescript": "^4.6.4"
   },
