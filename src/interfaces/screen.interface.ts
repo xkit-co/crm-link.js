@@ -1,5 +1,6 @@
 export enum Screen {
   Loading,
   Select,
-  Connecting
+  Connecting,
+  Mapping
 }

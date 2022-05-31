@@ -8,6 +8,7 @@ import ModalScreens from './ModalScreens'
 interface AppProps {
   visible: boolean
   token: string | undefined
+  mapping: unknown | undefined
   xkit: XkitJs | undefined
   resolve: (connection: Connection) => void
   reject: (message: string) => void
@@ -15,11 +16,21 @@ interface AppProps {
 
 const CRMList = ['salesforce']
 
-const App: FC<AppProps> = ({ visible, token, xkit, resolve, reject }) => {
+const App: FC<AppProps> = ({
+  visible,
+  token,
+  mapping,
+  xkit,
+  resolve,
+  reject
+}) => {
   const [screen, setScreen] = useState<Screen>(Screen.Loading)
   const [connectors, setConnectors] = useState<Connector[]>([])
   const [currentConnector, setCurrentConnector] = useState<
     Connector | undefined
+  >(undefined)
+  const [currentConnection, setCurrentConnection] = useState<
+    Connection | undefined
   >(undefined)
 
   const connect = async (connector: Connector) => {
@@ -28,7 +39,8 @@ const App: FC<AppProps> = ({ visible, token, xkit, resolve, reject }) => {
         setCurrentConnector(connector)
         setScreen(Screen.Connecting)
         const connection = await xkit.addConnection(connector.slug)
-        return resolve(connection)
+        setCurrentConnection(connection)
+        setScreen(Screen.Mapping)
       } catch (error) {
         return reject(friendlyMessage(error.message))
       }
@@ -79,7 +91,7 @@ const App: FC<AppProps> = ({ visible, token, xkit, resolve, reject }) => {
       <div
         className={[
           'fixed',
-          'bg-black/50',
+          'bg-black/30',
           'top-0',
           'left-0',
           'h-screen',
@@ -95,6 +107,7 @@ const App: FC<AppProps> = ({ visible, token, xkit, resolve, reject }) => {
       >
         <div
           className={[
+            'relative',
             'w-full',
             'h-full',
             'md:w-[360px]',
@@ -126,6 +139,9 @@ const App: FC<AppProps> = ({ visible, token, xkit, resolve, reject }) => {
             connectors={connectors}
             currentConnector={currentConnector}
             connect={connect}
+            mapping={mapping}
+            currentConnection={currentConnection}
+            resolve={resolve}
           />
         </div>
       </div>

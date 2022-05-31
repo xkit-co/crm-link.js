@@ -1,8 +1,9 @@
-import { Connector } from '@xkit-co/xkit.js'
+import { Connection, Connector } from '@xkit-co/xkit.js'
 import React, { FC } from 'react'
 import { Screen } from '../interfaces/screen.interface'
 import CRMConnector from './CRMConnector'
 import Spinner from './icons/Spinner'
+import MappingScreen from './MappingScreen'
 import ModalLayout from './ModalLayout'
 
 interface ModalScreensProps {
@@ -10,13 +11,19 @@ interface ModalScreensProps {
   connectors: Connector[]
   currentConnector: Connector | undefined
   connect: (connector: Connector) => Promise<void>
+  mapping: unknown | undefined
+  currentConnection: Connection | undefined
+  resolve: (connection: Connection) => void
 }
 
 const ModalScreens: FC<ModalScreensProps> = ({
   screen,
   connectors,
   currentConnector,
-  connect
+  connect,
+  mapping,
+  currentConnection,
+  resolve
 }) => {
   switch (screen) {
     case Screen.Loading: // Render skeleton loading layout
@@ -72,6 +79,14 @@ const ModalScreens: FC<ModalScreensProps> = ({
             Authorizing
           </div>
         </div>
+      ) : null
+    case Screen.Mapping:
+      return currentConnection ? (
+        <MappingScreen
+          mapping={mapping}
+          connection={currentConnection}
+          resolve={resolve}
+        />
       ) : null
     default:
       return null

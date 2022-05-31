@@ -27,6 +27,7 @@ document.head.appendChild(appFonts)
 const renderApp = (
   visible: boolean,
   token: string | undefined,
+  mapping: unknown | undefined,
   xkit: XkitJs | undefined,
   resolve: (connection: Connection) => void,
   reject: (message: string) => void
@@ -35,6 +36,7 @@ const renderApp = (
     <App
       visible={visible}
       token={token}
+      mapping={mapping}
       xkit={xkit}
       resolve={resolve}
       reject={reject}
@@ -48,18 +50,24 @@ const hideModal = () => {
     false,
     undefined,
     undefined,
+    undefined,
     () => undefined,
     () => undefined
   )
 }
 
-const linkCRM = (domain: string, token: string): Promise<Connection> => {
+const linkCRM = (
+  domain: string,
+  token: string,
+  mapping: unknown
+): Promise<Connection> => {
   const xkit = createXkit(domain)
   return new Promise((resolve, reject) => {
     if (token) {
       renderApp(
         true,
         token,
+        mapping,
         xkit,
         (connection: Connection) => {
           hideModal()
