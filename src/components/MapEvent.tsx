@@ -1,5 +1,11 @@
-import React, { FC, useState } from 'react'
-import { Event, UserObject } from '../interfaces/mapping.interface'
+import React, { FC } from 'react'
+import { getTransformationIndex } from '../functions/mapping'
+import {
+  Event,
+  Field,
+  ObjectMapping,
+  UserObject
+} from '../interfaces/mapping.interface'
 import Accordion from './Accordion'
 import ComboBox, { selectorsToOptions } from './ComboBox'
 
@@ -7,7 +13,14 @@ interface MapEventProps {
   event: Event
   isFirstItem: boolean
   currentUserObject: UserObject
-  onPayloadFieldSelect: (value: string, payloadFieldIndex: number) => void
+  currentObjectMapping: ObjectMapping
+  existingEventIndex: number
+  onPayloadFieldSelect: (
+    value: string,
+    type: string,
+    payloadField: Field,
+    existingFieldIndex: number
+  ) => void
   onEventTypeSelect: (value: string) => void
 }
 
@@ -15,31 +28,63 @@ const MapEvent: FC<MapEventProps> = ({
   event,
   isFirstItem,
   currentUserObject,
+  currentObjectMapping,
+  existingEventIndex,
   onPayloadFieldSelect,
   onEventTypeSelect
 }) => {
-  const [eventType, setEventType] = useState<string | undefined>(undefined)
+  const selectedActionType =
+    existingEventIndex > -1
+      ? currentObjectMapping.events[existingEventIndex].selectedActionType
+      : undefined
 
   let eventHandlingForm = <div></div>
-  if (eventType === 'update') {
+  if (selectedActionType === 'update') {
     eventHandlingForm = (
       <div className='pl-6'>
-        {event.payloadFields.map((field, index) => (
-          <div className='py-3' key={field.slug}>
-            <div>{field.label}</div>
-            <div className='text-xs text-neutral-500 py-2.5'>
-              {field.description}
+        {event.payloadFields.map((field) => {
+          const existingFieldIndex = getTransformationIndex(
+            field.slug,
+            currentObjectMapping.events[existingEventIndex].transformations
+          )
+          let selected = undefined
+          if (existingFieldIndex > -1) {
+            switch (
+              currentObjectMapping.events[existingEventIndex].transformations[
+                existingFieldIndex
+              ].name
+            ) {
+              case 'static':
+                selected =
+                  currentObjectMapping.events[existingEventIndex]
+                    .transformations[existingFieldIndex].static_value
+                break
+              case 'direct':
+              default:
+                selected =
+                  currentObjectMapping.events[existingEventIndex]
+                    .transformations[existingFieldIndex].source_pointer
+                break
+            }
+          }
+
+          return (
+            <div className='py-3' key={field.slug}>
+              <div>{field.label}</div>
+              <div className='text-xs text-neutral-500 py-2.5'>
+                {field.description}
+              </div>
+              <ComboBox
+                placeholder='Choose data'
+                selected={selected}
+                options={selectorsToOptions(currentUserObject.selectors)}
+                onSelect={(value, type) => {
+                  onPayloadFieldSelect(value, type, field, existingFieldIndex)
+                }}
+              />
             </div>
-            <ComboBox
-              placeholder='Choose data'
-              selected={field.selection}
-              options={selectorsToOptions(currentUserObject.selectors)}
-              onSelect={(value) => {
-                onPayloadFieldSelect(value, index)
-              }}
-            />
-          </div>
-        ))}
+          )
+        })}
       </div>
     )
   }
@@ -52,13 +97,12 @@ const MapEvent: FC<MapEventProps> = ({
         </div>
         <ComboBox
           placeholder='Select action'
-          selected={event.selection}
+          selected={selectedActionType}
           options={[
             { label: 'Update existing records', value: 'update' },
             { label: `Don't take any action`, value: 'none' }
           ]}
           onSelect={(value) => {
-            setEventType(value)
             onEventTypeSelect(value)
           }}
         />

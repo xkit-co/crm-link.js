@@ -14,7 +14,7 @@ interface ComboBoxProps {
   placeholder: string
   options: Option[]
   selected?: string
-  onSelect: (value: string) => void
+  onSelect: (value: string, type: string) => void
 }
 
 // TODO: Implement functionality: select nested options, disable options based on type and format, enter static value
@@ -112,7 +112,7 @@ const ComboBox: FC<ComboBoxProps> = ({
 interface OptionItemProps {
   option: Option
   selected: string | undefined
-  onSelect: (value: string) => void
+  onSelect: (value: string, type: string) => void
   close: () => void
 }
 
@@ -140,7 +140,7 @@ const OptionItem: FC<OptionItemProps> = ({
         .join(' ')
         .trim()}
       onClick={() => {
-        onSelect(option.value)
+        onSelect(option.value, 'direct')
         close()
       }}
     >

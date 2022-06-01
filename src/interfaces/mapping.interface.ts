@@ -6,13 +6,12 @@ export enum MappingStages {
   RepeatDialog // Choice for the user to map another object from the CRM or finish setup
 }
 
-interface Field {
+export interface Field {
   slug: string
   type: string
   format?: string
   label: string
   description: string
-  selection?: string
 }
 
 export interface Event {
@@ -21,14 +20,14 @@ export interface Event {
   label: string
   description: string
   payloadFields: Field[]
-  selection?: string
 }
 
 export interface DeveloperObject {
+  id: number
   slug: string
-  name: string
+  label: string
   description: string
-  fields: Field[]
+  fields?: Field[]
   events?: Event[]
 }
 
@@ -45,4 +44,25 @@ export interface UserObject {
   label_one: string
   label_many: string
   selectors: Selector[]
+}
+
+export interface Transformation {
+  fieldSlug: string
+  name: string
+  source_pointer?: string
+  static_value?: string
+}
+
+export interface ObjectMapping {
+  developerObjectId: number
+  userObjectId: number
+  transformations: Transformation[]
+  events: {
+    slug: string
+    type: string
+    label: string
+    description: string
+    selectedActionType: string
+    transformations: Transformation[]
+  }[]
 }

@@ -1,7 +1,8 @@
 export const dummyDeveloperObjects = [
   {
+    id: 341238,
     slug: 'person',
-    name: 'Person',
+    label: 'Person',
     description:
       'Acme associates Persons with Contacts or Users in your CRM so that gifts and thank you cards can be sent to them.',
     fields: [
