@@ -1,7 +1,8 @@
-import React, { FC, useState } from 'react'
+import React, { FC, useEffect, useRef, useState } from 'react'
 import { Selector } from '../interfaces/mapping.interface'
 import Caret from './icons/Caret'
-import Cross from './icons/Cross'
+import Minus from './icons/Minus'
+import Plus from './icons/Plus'
 
 export interface Option {
   label: string
@@ -13,21 +14,75 @@ export interface Option {
 interface ComboBoxProps {
   placeholder: string
   options: Option[]
-  selected?: string
+  allowFiltering?: boolean
+  allowStatic?: boolean
+  selected: {
+    value?: string
+    static: boolean
+  }
   onSelect: (value: string, type: string) => void
 }
 
-// TODO: Implement functionality: select nested options, disable options based on type and format, enter static value
+// TODO: Implement functionality: disable options based on type and format groups
 
 const ComboBox: FC<ComboBoxProps> = ({
   placeholder,
   options,
+  allowFiltering,
+  allowStatic,
   selected,
   onSelect
 }) => {
-  const [expanded, setExpanded] = useState<boolean>(false)
+  const [visible, setVisible] = useState<boolean>(false)
+  const [searchFieldText, setSearchFieldText] = useState<string>('')
+  const inputRef = useRef<HTMLDivElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const searchFieldRef = useRef<HTMLInputElement>(null)
 
-  const selectedOption = findSelectedOption(options, selected)
+  useEffect(() => {
+    const positionDropdown = () => {
+      if (dropdownRef.current && inputRef.current) {
+        dropdownRef.current.style.left = `${
+          inputRef.current.getBoundingClientRect().left
+        }px`
+        // We want to ideally show the dropdown just below the input field that is clicked
+        const desiredTopOffset =
+          inputRef.current.getBoundingClientRect().top + 40
+        /* But if there's not enough space to do so, show it such that there is at least a
+         * 10px gap between the bottom of the dropdown and the browser window limit
+         */
+        if (
+          desiredTopOffset + dropdownRef.current.offsetHeight >
+          document.body.clientHeight - 10
+        ) {
+          dropdownRef.current.style.top = `${
+            document.body.clientHeight - 10 - dropdownRef.current.offsetHeight
+          }px`
+        } else {
+          dropdownRef.current.style.top = `${desiredTopOffset}px`
+        }
+      }
+    }
+
+    if (allowFiltering && visible && searchFieldRef.current) {
+      searchFieldRef.current.focus()
+    }
+
+    positionDropdown()
+    window.addEventListener('resize', positionDropdown)
+
+    return () => {
+      window.removeEventListener('resize', positionDropdown)
+    }
+  }, [visible, allowFiltering, inputRef, dropdownRef, searchFieldRef])
+
+  const selectedOption: Option | undefined = selected.static
+    ? {
+        label: `"${selected.value || ''}"`,
+        subLabel: 'static',
+        value: selected.value || ''
+      }
+    : findSelectedOption(options, selected.value)
 
   return (
     <>
@@ -35,8 +90,10 @@ const ComboBox: FC<ComboBoxProps> = ({
         className='text-sm px-2 py-1 flex justify-between items-center rounded border-solid border border-neutral-200 shadow-inner cursor-text focus:outline focus:outline-2 outline-offset-1 outline-sky-500'
         tabIndex={0}
         onClick={() => {
-          setExpanded(true)
+          setSearchFieldText('')
+          setVisible(true)
         }}
+        ref={inputRef}
       >
         <div
           className={[
@@ -55,53 +112,87 @@ const ComboBox: FC<ComboBoxProps> = ({
       <div
         className={[
           'fixed',
-          'bg-black/30',
           'top-0',
           'left-0',
           'h-screen',
           'w-screen',
-          'justify-center',
-          'items-center',
           'z-[1001]',
-          expanded ? 'flex' : 'hidden'
+          visible ? 'block' : 'hidden'
         ]
           .join(' ')
           .trim()}
+        onClick={(event) => {
+          if (event.target === event.currentTarget) {
+            setVisible(false)
+          }
+        }}
       >
         <div
           className={[
             'bg-white',
-            'rounded-md',
-            'w-[300px]',
-            'max-h-[510px]',
+            'rounded',
+            'shadow-md',
+            allowFiltering ? 'min-w-[360px]' : 'min-w-[312px]',
+            'max-w-[600px]',
+            'max-h-[500px]',
             'overflow-x-auto',
             'overflow-y-auto',
+            'absolute',
             'z-[1002]',
-            expanded ? 'block' : 'hidden'
+            visible ? 'block' : 'hidden'
           ]
             .join(' ')
             .trim()}
+          ref={dropdownRef}
         >
-          <div className='flex justify-end items-center box-border p-2 w-full'>
-            <Cross
-              className='w-4 h-4 block cursor-pointer'
-              onClick={() => {
-                setExpanded(false)
-              }}
-            />
-          </div>
           <div className='min-w-fit'>
-            {options.map((option) => (
-              <OptionItem
-                option={option}
-                selected={selected}
-                onSelect={onSelect}
-                close={() => {
-                  setExpanded(false)
+            {allowFiltering ? (
+              <input
+                className='box-border p-2 block w-full outline-none border-none text-sm bg-white placeholder:text-neutral-500'
+                placeholder='Type to filter or enter static data'
+                type='text'
+                value={searchFieldText}
+                onChange={(event) => {
+                  setSearchFieldText(event.target.value.trim())
                 }}
-                key={option.value}
+                ref={searchFieldRef}
               />
-            ))}
+            ) : null}
+            {allowStatic && (selected.static || searchFieldText) ? (
+              <OptionItem
+                option={
+                  searchFieldText
+                    ? {
+                        label: `"${searchFieldText}"`,
+                        subLabel: 'static',
+                        value: searchFieldText
+                      }
+                    : selectedOption!
+                }
+                selected={selected.static ? selected.value : undefined}
+                onSelect={(value) => {
+                  onSelect(value, 'static')
+                }}
+                close={() => {
+                  setVisible(false)
+                }}
+                searchFieldText={searchFieldText}
+              />
+            ) : null}
+            {options
+              .filter((option) => filterOption(option, searchFieldText))
+              .map((option) => (
+                <OptionItem
+                  option={option}
+                  selected={selected.static ? undefined : selected.value}
+                  onSelect={onSelect}
+                  close={() => {
+                    setVisible(false)
+                  }}
+                  searchFieldText={searchFieldText}
+                  key={option.value}
+                />
+              ))}
           </div>
         </div>
       </div>
@@ -114,58 +205,104 @@ interface OptionItemProps {
   selected: string | undefined
   onSelect: (value: string, type: string) => void
   close: () => void
+  searchFieldText: string
 }
 
 const OptionItem: FC<OptionItemProps> = ({
   option,
   selected,
   onSelect,
-  close
-}) => (
-  <>
-    <div
-      className={[
-        'p-2',
-        'text-sm',
-        'border-t',
-        'border-b-0',
-        'border-l-0',
-        'border-r-0',
-        'border-solid',
-        'border-neutral-200',
-        'hover:bg-black/5',
-        'cursor-pointer',
-        option.value === selected ? 'bg-black/10' : ''
-      ]
-        .join(' ')
-        .trim()}
-      onClick={() => {
-        onSelect(option.value, 'direct')
-        close()
-      }}
-    >
-      {option.label}
-      {option.subLabel ? (
-        <span className='text-xs text-neutral-500 pl-2'>{option.subLabel}</span>
-      ) : (
-        ''
-      )}
-    </div>
-    {option.children && option.children.length ? (
-      <div className='pl-4'>
-        {option.children.map((childOption) => (
-          <OptionItem
-            option={childOption}
-            selected={selected}
-            onSelect={onSelect}
-            close={close}
-            key={childOption.value}
-          />
-        ))}
+  close,
+  searchFieldText
+}) => {
+  const [expanded, setExpanded] = useState<boolean>(true)
+  let expandButton = null
+  if (option.children && option.children.length) {
+    if (expanded) {
+      expandButton = (
+        <Minus
+          className='mr-2 h-3 w-3 p-1 cursor-pointer rounded hover:bg-black/20'
+          onClick={(event) => {
+            event.stopPropagation()
+            setExpanded(!expanded)
+          }}
+        />
+      )
+    } else {
+      expandButton = (
+        <Plus
+          className='mr-2 h-3 w-3 p-1 cursor-pointer rounded hover:bg-black/20'
+          onClick={(event) => {
+            event.stopPropagation()
+            setExpanded(!expanded)
+          }}
+        />
+      )
+    }
+  }
+
+  return (
+    <>
+      <div
+        className={[
+          'p-2',
+          'text-sm',
+          'flex',
+          'items-center',
+          'hover:bg-black/5',
+          'cursor-pointer',
+          option.value === selected ? 'bg-black/10' : ''
+        ]
+          .join(' ')
+          .trim()}
+        onClick={() => {
+          onSelect(option.value, 'direct')
+          close()
+        }}
+      >
+        {expandButton}
+        <div className='whitespace-nowrap'>{option.label}</div>
+        {option.subLabel ? (
+          <span className='text-xs text-neutral-500 pl-2'>
+            {option.subLabel}
+          </span>
+        ) : (
+          ''
+        )}
       </div>
-    ) : null}
-  </>
-)
+      {option.children && option.children.length && expanded ? (
+        <div className='pl-4'>
+          {option.children
+            .filter((childOption) => filterOption(childOption, searchFieldText))
+            .map((childOption) => (
+              <OptionItem
+                option={childOption}
+                selected={selected}
+                onSelect={onSelect}
+                close={close}
+                searchFieldText={searchFieldText}
+                key={childOption.value}
+              />
+            ))}
+        </div>
+      ) : null}
+    </>
+  )
+}
+
+const filterOption = (option: Option, filter: string): boolean => {
+  if (option.label.toLowerCase().includes(filter.toLowerCase())) {
+    return true
+  }
+  if (option.children && option.children.length) {
+    for (const childOption of option.children) {
+      if (filterOption(childOption, filter)) {
+        return true
+      }
+    }
+  }
+  return false
+}
 
 const findSelectedOption = (
   options: Option[],

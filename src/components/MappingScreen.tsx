@@ -183,21 +183,25 @@ const MappingScreen: FC<MappingScreenProps> = ({
                     field.slug,
                     currentObjectMapping.transformations
                   )
-                  let selected = undefined
+                  const selected: {
+                    value: string | undefined
+                    static: boolean
+                  } = { value: undefined, static: false }
                   if (existingFieldIndex > -1) {
                     switch (
                       currentObjectMapping.transformations[existingFieldIndex]
                         .name
                     ) {
                       case 'static':
-                        selected =
+                        selected.value =
                           currentObjectMapping.transformations[
                             existingFieldIndex
                           ].static_value
+                        selected.static = true
                         break
                       case 'direct':
                       default:
-                        selected =
+                        selected.value =
                           currentObjectMapping.transformations[
                             existingFieldIndex
                           ].source_pointer
@@ -217,6 +221,8 @@ const MappingScreen: FC<MappingScreenProps> = ({
                         options={selectorsToOptions(
                           userObjects[currentUserObjectIndex].selectors
                         )}
+                        allowFiltering={true}
+                        allowStatic={true}
                         onSelect={(value, type) => {
                           const transformation: Transformation = {
                             fieldSlug: field.slug,

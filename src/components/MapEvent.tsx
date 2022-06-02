@@ -47,7 +47,7 @@ const MapEvent: FC<MapEventProps> = ({
             field.slug,
             currentObjectMapping.events[existingEventIndex].transformations
           )
-          let selected = undefined
+          let selectedValue = undefined
           if (existingFieldIndex > -1) {
             switch (
               currentObjectMapping.events[existingEventIndex].transformations[
@@ -55,13 +55,13 @@ const MapEvent: FC<MapEventProps> = ({
               ].name
             ) {
               case 'static':
-                selected =
+                selectedValue =
                   currentObjectMapping.events[existingEventIndex]
                     .transformations[existingFieldIndex].static_value
                 break
               case 'direct':
               default:
-                selected =
+                selectedValue =
                   currentObjectMapping.events[existingEventIndex]
                     .transformations[existingFieldIndex].source_pointer
                 break
@@ -76,7 +76,8 @@ const MapEvent: FC<MapEventProps> = ({
               </div>
               <ComboBox
                 placeholder='Choose data'
-                selected={selected}
+                selected={{ value: selectedValue, static: false }}
+                allowFiltering={true}
                 options={selectorsToOptions(currentUserObject.selectors)}
                 onSelect={(value, type) => {
                   onPayloadFieldSelect(value, type, field, existingFieldIndex)
@@ -97,7 +98,7 @@ const MapEvent: FC<MapEventProps> = ({
         </div>
         <ComboBox
           placeholder='Select action'
-          selected={selectedActionType}
+          selected={{ value: selectedActionType, static: false }}
           options={[
             { label: 'Update existing records', value: 'update' },
             { label: `Don't take any action`, value: 'none' }

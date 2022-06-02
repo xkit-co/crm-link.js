@@ -38,7 +38,7 @@ export const isAllFieldsSelected = (
     return true
   }
   for (const field of developerObject.fields || []) {
-    if (getTransformationIndex(field.slug, transformations) <= -1) {
+    if (!(getTransformationIndex(field.slug, transformations) > -1)) {
       return false
     }
   }
@@ -56,7 +56,7 @@ export const isAllEventsSelected = (
     const existingEventIndex = objectMappingEvents.findIndex(
       (objectMappingEvent) => objectMappingEvent.slug === event.slug
     )
-    if (existingEventIndex <= -1) {
+    if (!(existingEventIndex > -1)) {
       return false
     }
     if (
@@ -64,10 +64,12 @@ export const isAllEventsSelected = (
     ) {
       for (const field of event.payloadFields) {
         if (
-          getTransformationIndex(
-            field.slug,
-            objectMappingEvents[existingEventIndex].transformations
-          ) <= -1
+          !(
+            getTransformationIndex(
+              field.slug,
+              objectMappingEvents[existingEventIndex].transformations
+            ) > -1
+          )
         ) {
           return false
         }

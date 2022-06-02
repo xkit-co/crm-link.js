@@ -1,4 +1,4 @@
 export interface IconProps {
   className: string
-  onClick?: () => void
+  onClick?: (event: { stopPropagation: () => void }) => void
 }
