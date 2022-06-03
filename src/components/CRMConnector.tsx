@@ -16,7 +16,7 @@ const CRMConnector: FC<CRMConnectorProps> = ({
     <div
       className={[
         'box-border',
-        'border-t',
+        'border-t-0',
         'border-r-0',
         'border-l-0',
         'border-solid',
@@ -29,7 +29,7 @@ const CRMConnector: FC<CRMConnectorProps> = ({
         'gap-4',
         'justify-start',
         'items-center',
-        lastItem ? 'border-b' : 'border-b-0'
+        lastItem ? 'border-b-0' : 'border-b'
       ]
         .join(' ')
         .trim()}

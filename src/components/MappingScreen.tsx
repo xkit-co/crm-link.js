@@ -27,6 +27,7 @@ import Search from './icons/Search'
 import Tick from './icons/Tick'
 import MapEvent from './MapEvent'
 import StepIndicator from './StepIndicator'
+import XkitBranding from './XkitBranding'
 
 declare const window: xkitBrowserWindow
 
@@ -36,12 +37,14 @@ interface MappingScreenProps {
   mapping: unknown | undefined
   connection: Connection
   resolve: (connection: Connection) => void
+  removeBranding: boolean
 }
 
 const MappingScreen: FC<MappingScreenProps> = ({
   mapping,
   connection,
-  resolve
+  resolve,
+  removeBranding
 }) => {
   const [currentObjectMapping, setCurrentObjectMapping] = useState<
     ObjectMapping | undefined
@@ -119,7 +122,7 @@ const MappingScreen: FC<MappingScreenProps> = ({
                 />
               </div>
             </div>
-            <div className='overflow-y-auto'>
+            <div className='border-b border-t-0 border-l-0 border-r-0 border-solid border-neutral-200 overflow-y-auto'>
               {filteredUserObjects.map((userObject, index) => {
                 const existingMapping = objectMappings.find(
                   (objectMapping) =>
@@ -131,7 +134,20 @@ const MappingScreen: FC<MappingScreenProps> = ({
                 return (
                   <div
                     key={userObject.id}
-                    className='border-b border-t-0 border-l-0 border-r-0 border-solid border-neutral-200 hover:bg-black/5 cursor-pointer'
+                    className={[
+                      index === filteredUserObjects.length - 1
+                        ? 'border-b-0'
+                        : 'border-b',
+                      'border-t-0',
+                      'border-l-0',
+                      'border-r-0',
+                      'border-solid',
+                      'border-neutral-200',
+                      'hover:bg-black/5',
+                      'cursor-pointer'
+                    ]
+                      .join(' ')
+                      .trim()}
                     onClick={() => {
                       if (existingMapping) {
                         setCurrentObjectMapping(existingMapping)
@@ -169,6 +185,11 @@ const MappingScreen: FC<MappingScreenProps> = ({
                 )
               })}
             </div>
+            {removeBranding ? null : (
+              <div className='py-2.5'>
+                <XkitBranding />
+              </div>
+            )}
           </div>
         </>
       ) : null
@@ -182,156 +203,158 @@ const MappingScreen: FC<MappingScreenProps> = ({
               that correspond to the given fields for{' '}
               {developerObjects[currentDeveloperObjectIndex].label}
             </div>
-            <div className='pb-2.5 px-6 overflow-y-auto'>
-              {developerObjects[currentDeveloperObjectIndex].fields?.map(
-                (field) => {
-                  const existingFieldIndex = getTransformationIndex(
-                    field.slug,
-                    currentObjectMapping.transformations
-                  )
-                  const selected: {
-                    value: string | undefined
-                    static: boolean
-                  } = { value: undefined, static: false }
-                  if (existingFieldIndex > -1) {
-                    switch (
-                      currentObjectMapping.transformations[existingFieldIndex]
-                        .name
-                    ) {
-                      case 'static':
-                        selected.value =
-                          currentObjectMapping.transformations[
-                            existingFieldIndex
-                          ].static_value
-                        selected.static = true
-                        break
-                      case 'date':
-                      case 'direct':
-                      default:
-                        selected.value =
-                          currentObjectMapping.transformations[
-                            existingFieldIndex
-                          ].source_pointer
-                        break
-                    }
-                  }
-
-                  let dateTransformation = null
-                  if (selected.value && !selected.static) {
-                    const option = findSelectedOption(
-                      selectorsToOptions(
-                        userObjects[currentUserObjectIndex].selectors
-                      ),
-                      selected.value
+            <div className='pb-2.5 px-6 grow flex flex-col overflow-y-auto'>
+              <div className='grow'>
+                {developerObjects[currentDeveloperObjectIndex].fields?.map(
+                  (field) => {
+                    const existingFieldIndex = getTransformationIndex(
+                      field.slug,
+                      currentObjectMapping.transformations
                     )
-                    if (option) {
-                      const selectableCriteria = getSelectableCriteria(
-                        option,
-                        field
-                      )
-                      if (
-                        selectableCriteria &&
-                        selectableCriteria.transformations.includes('date')
+                    const selected: {
+                      value: string | undefined
+                      static: boolean
+                    } = { value: undefined, static: false }
+                    if (existingFieldIndex > -1) {
+                      switch (
+                        currentObjectMapping.transformations[existingFieldIndex]
+                          .name
                       ) {
-                        let disabled = false
-                        const intersectionTransformations =
-                          supportedTransformations.filter((transformation) =>
-                            selectableCriteria.transformations.includes(
-                              transformation
-                            )
-                          )
-                        if (
-                          intersectionTransformations.length === 1 &&
-                          intersectionTransformations[0] === 'date'
-                        ) {
-                          disabled = true
-                        }
-
-                        dateTransformation = (
-                          <CheckBox
-                            label='Convert to ISO 8601 date format'
-                            checked={
-                              currentObjectMapping.transformations[
-                                existingFieldIndex
-                              ].name === 'date'
-                            }
-                            disabled={disabled}
-                            onChange={(value) => {
-                              if (existingFieldIndex > -1) {
-                                const clonedObjectMapping =
-                                  window.structuredClone<ObjectMapping>(
-                                    currentObjectMapping
-                                  )
-                                clonedObjectMapping.transformations[
-                                  existingFieldIndex
-                                ].name = value ? 'date' : 'direct'
-                                setCurrentObjectMapping(clonedObjectMapping)
-                              }
-                            }}
-                          />
-                        )
+                        case 'static':
+                          selected.value =
+                            currentObjectMapping.transformations[
+                              existingFieldIndex
+                            ].static_value
+                          selected.static = true
+                          break
+                        case 'date':
+                        case 'direct':
+                        default:
+                          selected.value =
+                            currentObjectMapping.transformations[
+                              existingFieldIndex
+                            ].source_pointer
+                          break
                       }
                     }
-                  }
 
-                  return (
-                    <div className='py-3' key={field.slug}>
-                      <div>{field.label}</div>
-                      <div className='text-xs text-neutral-500 py-2.5'>
-                        {field.description}
-                      </div>
-                      <ComboBox
-                        placeholder='Choose data'
-                        selected={selected}
-                        options={selectorsToOptions(
+                    let dateTransformation = null
+                    if (selected.value && !selected.static) {
+                      const option = findSelectedOption(
+                        selectorsToOptions(
                           userObjects[currentUserObjectIndex].selectors
-                        )}
-                        allowFiltering={true}
-                        allowStatic={true}
-                        criteria={(option) => {
-                          return isSelectableCriteria(option, field)
-                        }}
-                        getSelectableCriteria={(option) => {
-                          return getSelectableCriteria(option, field)
-                        }}
-                        onSelect={(value, type) => {
-                          const transformation: Transformation = {
-                            fieldSlug: field.slug,
-                            name: type
-                          }
-                          switch (type) {
-                            case 'static':
-                              transformation.static_value = value
-                              break
-                            case 'date':
-                            case 'direct':
-                            default:
-                              transformation.source_pointer = value
-                              break
+                        ),
+                        selected.value
+                      )
+                      if (option) {
+                        const selectableCriteria = getSelectableCriteria(
+                          option,
+                          field
+                        )
+                        if (
+                          selectableCriteria &&
+                          selectableCriteria.transformations.includes('date')
+                        ) {
+                          let disabled = false
+                          const intersectionTransformations =
+                            supportedTransformations.filter((transformation) =>
+                              selectableCriteria.transformations.includes(
+                                transformation
+                              )
+                            )
+                          if (
+                            intersectionTransformations.length === 1 &&
+                            intersectionTransformations[0] === 'date'
+                          ) {
+                            disabled = true
                           }
 
-                          const clonedObjectMapping =
-                            window.structuredClone<ObjectMapping>(
-                              currentObjectMapping
-                            )
-                          if (existingFieldIndex > -1) {
-                            clonedObjectMapping.transformations[
-                              existingFieldIndex
-                            ] = transformation
-                          } else {
-                            clonedObjectMapping.transformations.push(
-                              transformation
-                            )
-                          }
-                          setCurrentObjectMapping(clonedObjectMapping)
-                        }}
-                      />
-                      {dateTransformation}
-                    </div>
-                  )
-                }
-              )}
-              <div className='py-6'>
+                          dateTransformation = (
+                            <CheckBox
+                              label='Convert to ISO 8601 date format'
+                              checked={
+                                currentObjectMapping.transformations[
+                                  existingFieldIndex
+                                ].name === 'date'
+                              }
+                              disabled={disabled}
+                              onChange={(value) => {
+                                if (existingFieldIndex > -1) {
+                                  const clonedObjectMapping =
+                                    window.structuredClone<ObjectMapping>(
+                                      currentObjectMapping
+                                    )
+                                  clonedObjectMapping.transformations[
+                                    existingFieldIndex
+                                  ].name = value ? 'date' : 'direct'
+                                  setCurrentObjectMapping(clonedObjectMapping)
+                                }
+                              }}
+                            />
+                          )
+                        }
+                      }
+                    }
+
+                    return (
+                      <div className='py-3' key={field.slug}>
+                        <div>{field.label}</div>
+                        <div className='text-xs text-neutral-500 py-2.5'>
+                          {field.description}
+                        </div>
+                        <ComboBox
+                          placeholder='Choose data'
+                          selected={selected}
+                          options={selectorsToOptions(
+                            userObjects[currentUserObjectIndex].selectors
+                          )}
+                          allowFiltering={true}
+                          allowStatic={true}
+                          criteria={(option) => {
+                            return isSelectableCriteria(option, field)
+                          }}
+                          getSelectableCriteria={(option) => {
+                            return getSelectableCriteria(option, field)
+                          }}
+                          onSelect={(value, type) => {
+                            const transformation: Transformation = {
+                              fieldSlug: field.slug,
+                              name: type
+                            }
+                            switch (type) {
+                              case 'static':
+                                transformation.static_value = value
+                                break
+                              case 'date':
+                              case 'direct':
+                              default:
+                                transformation.source_pointer = value
+                                break
+                            }
+
+                            const clonedObjectMapping =
+                              window.structuredClone<ObjectMapping>(
+                                currentObjectMapping
+                              )
+                            if (existingFieldIndex > -1) {
+                              clonedObjectMapping.transformations[
+                                existingFieldIndex
+                              ] = transformation
+                            } else {
+                              clonedObjectMapping.transformations.push(
+                                transformation
+                              )
+                            }
+                            setCurrentObjectMapping(clonedObjectMapping)
+                          }}
+                        />
+                        {dateTransformation}
+                      </div>
+                    )
+                  }
+                )}
+              </div>
+              <div className='pt-6 pb-4'>
                 <Button
                   text='Continue'
                   type={
@@ -361,6 +384,7 @@ const MappingScreen: FC<MappingScreenProps> = ({
                   }}
                 />
               </div>
+              {removeBranding ? null : <XkitBranding />}
             </div>
           </div>
         </>
@@ -374,86 +398,89 @@ const MappingScreen: FC<MappingScreenProps> = ({
               Choose how you want to handle changes when{' '}
               {developerObjects[currentDeveloperObjectIndex].label} is updated
             </div>
-            <div className='pb-2.5 overflow-y-auto'>
-              {developerObjects[currentDeveloperObjectIndex].events?.map(
-                (event, index) => {
-                  const existingEventIndex =
-                    currentObjectMapping.events.findIndex(
-                      (existingEvent) => existingEvent.slug === event.slug
-                    )
-                  return (
-                    <MapEvent
-                      event={event}
-                      isFirstItem={index === 0}
-                      currentUserObject={userObjects[currentUserObjectIndex]}
-                      currentObjectMapping={currentObjectMapping}
-                      existingEventIndex={existingEventIndex}
-                      onEventTypeSelect={(value) => {
-                        const newEvent = {
-                          slug: event.slug,
-                          type: event.type,
-                          label: event.label,
-                          description: event.description,
-                          selectedActionType: value,
-                          transformations: []
-                        }
-                        const clonedObjectMapping =
-                          window.structuredClone<ObjectMapping>(
-                            currentObjectMapping
-                          )
-                        if (existingEventIndex > -1) {
-                          clonedObjectMapping.events[existingEventIndex] = {
-                            ...newEvent,
-                            transformations:
-                              clonedObjectMapping.events[existingEventIndex]
-                                .transformations
+            <div className='pb-2.5 flex flex-col grow overflow-y-auto'>
+              <div className='grow'>
+                {developerObjects[currentDeveloperObjectIndex].events?.map(
+                  (event, index) => {
+                    const existingEventIndex =
+                      currentObjectMapping.events.findIndex(
+                        (existingEvent) => existingEvent.slug === event.slug
+                      )
+                    return (
+                      <MapEvent
+                        event={event}
+                        isFirstItem={index === 0}
+                        currentUserObject={userObjects[currentUserObjectIndex]}
+                        currentObjectMapping={currentObjectMapping}
+                        existingEventIndex={existingEventIndex}
+                        onEventTypeSelect={(value) => {
+                          const newEvent = {
+                            slug: event.slug,
+                            type: event.type,
+                            label: event.label,
+                            description: event.description,
+                            selectedActionType: value,
+                            transformations: []
                           }
-                        } else {
-                          clonedObjectMapping.events.push(newEvent)
-                        }
-                        setCurrentObjectMapping(clonedObjectMapping)
-                      }}
-                      onPayloadFieldSelect={(
-                        value,
-                        type,
-                        payloadField,
-                        existingFieldIndex
-                      ) => {
-                        const transformation: Transformation = {
-                          fieldSlug: payloadField.slug,
-                          name: type
-                        }
-                        switch (type) {
-                          case 'static':
-                            transformation.static_value = value
-                            break
-                          case 'direct':
-                          default:
-                            transformation.source_pointer = value
-                            break
-                        }
+                          const clonedObjectMapping =
+                            window.structuredClone<ObjectMapping>(
+                              currentObjectMapping
+                            )
+                          if (existingEventIndex > -1) {
+                            clonedObjectMapping.events[existingEventIndex] = {
+                              ...newEvent,
+                              transformations:
+                                clonedObjectMapping.events[existingEventIndex]
+                                  .transformations
+                            }
+                          } else {
+                            clonedObjectMapping.events.push(newEvent)
+                          }
+                          setCurrentObjectMapping(clonedObjectMapping)
+                        }}
+                        onPayloadFieldSelect={(
+                          value,
+                          type,
+                          payloadField,
+                          existingFieldIndex
+                        ) => {
+                          const transformation: Transformation = {
+                            fieldSlug: payloadField.slug,
+                            name: type
+                          }
+                          switch (type) {
+                            case 'static':
+                              transformation.static_value = value
+                              break
+                            case 'direct':
+                            default:
+                              transformation.source_pointer = value
+                              break
+                          }
 
-                        const clonedObjectMapping =
-                          window.structuredClone<ObjectMapping>(
-                            currentObjectMapping
-                          )
-                        if (existingFieldIndex > -1) {
-                          clonedObjectMapping.events[
-                            existingEventIndex
-                          ].transformations[existingFieldIndex] = transformation
-                        } else {
-                          clonedObjectMapping.events[
-                            existingEventIndex
-                          ].transformations.push(transformation)
-                        }
-                        setCurrentObjectMapping(clonedObjectMapping)
-                      }}
-                      key={event.slug}
-                    />
-                  )
-                }
-              )}
-              <div className='px-6 py-6'>
+                          const clonedObjectMapping =
+                            window.structuredClone<ObjectMapping>(
+                              currentObjectMapping
+                            )
+                          if (existingFieldIndex > -1) {
+                            clonedObjectMapping.events[
+                              existingEventIndex
+                            ].transformations[existingFieldIndex] =
+                              transformation
+                          } else {
+                            clonedObjectMapping.events[
+                              existingEventIndex
+                            ].transformations.push(transformation)
+                          }
+                          setCurrentObjectMapping(clonedObjectMapping)
+                        }}
+                        key={event.slug}
+                      />
+                    )
+                  }
+                )}
+              </div>
+              <div className='px-6 pt-6 pb-4'>
                 <Button
                   text='Continue'
                   type={
@@ -477,6 +504,7 @@ const MappingScreen: FC<MappingScreenProps> = ({
                   }}
                 />
               </div>
+              {removeBranding ? null : <XkitBranding />}
             </div>
           </div>
         </>
@@ -485,54 +513,65 @@ const MappingScreen: FC<MappingScreenProps> = ({
       return developerObjects && userObjects && currentObjectMapping ? (
         <>
           <StepIndicator currentStep={currentStep} maxSteps={maxSteps} />
-          <div className='text-sm pt-2.5 pb-4 px-6'>
-            Would you like to map another object from your CRM to{' '}
-            {developerObjects[currentDeveloperObjectIndex].label}?
-          </div>
-          <div className='py-4 px-6'>
-            <Button
-              text='Map another object'
-              type='primary'
-              onClick={() => {
-                let extraSteps = 2
-                if (developerObjects[currentDeveloperObjectIndex].fields) {
-                  extraSteps = extraSteps + 1
-                }
-                if (developerObjects[currentDeveloperObjectIndex].events) {
-                  extraSteps = extraSteps + 1
-                }
-                setMaxSteps(maxSteps + extraSteps)
-                setCurrentStep(currentStep + 1)
-                updateMapping(currentObjectMapping, objectMappings)
-                setCurrentStage(MappingStages.Objects)
-              }}
-            />
-          </div>
-          <div className='py-4 px-6'>
-            {currentDeveloperObjectIndex === developerObjects.length - 1 ? (
-              <Button
-                text='Finish setup'
-                type='success'
-                onClick={() => {
-                  setCurrentStep(0)
-                  updateMapping(currentObjectMapping, objectMappings)
-                  resolve(connection)
-                }}
-              />
-            ) : (
-              <Button
-                text='Continue setup'
-                type='success'
-                onClick={() => {
-                  setCurrentStep(currentStep + 1)
-                  updateMapping(currentObjectMapping, objectMappings)
-                  setCurrentDeveloperObjectIndex(
-                    currentDeveloperObjectIndex + 1
-                  )
-                  setCurrentStage(MappingStages.Objects)
-                }}
-              />
-            )}
+          <div className='flex flex-col h-[calc(100%-40px)]'>
+            <div className='text-sm pt-2.5 pb-4 px-6'>
+              Would you like to map another object from your CRM to{' '}
+              {developerObjects[currentDeveloperObjectIndex].label}?
+            </div>
+            <div className='pb-2.5 flex flex-col grow overflow-y-auto'>
+              <div className='grow'>
+                <div className='py-4 px-6'>
+                  <Button
+                    text='Map another object'
+                    type='primary'
+                    onClick={() => {
+                      let extraSteps = 2
+                      if (
+                        developerObjects[currentDeveloperObjectIndex].fields
+                      ) {
+                        extraSteps = extraSteps + 1
+                      }
+                      if (
+                        developerObjects[currentDeveloperObjectIndex].events
+                      ) {
+                        extraSteps = extraSteps + 1
+                      }
+                      setMaxSteps(maxSteps + extraSteps)
+                      setCurrentStep(currentStep + 1)
+                      updateMapping(currentObjectMapping, objectMappings)
+                      setCurrentStage(MappingStages.Objects)
+                    }}
+                  />
+                </div>
+              </div>
+              <div className='px-6 pt-6 pb-4'>
+                {currentDeveloperObjectIndex === developerObjects.length - 1 ? (
+                  <Button
+                    text='Finish setup'
+                    type='success'
+                    onClick={() => {
+                      setCurrentStep(0)
+                      updateMapping(currentObjectMapping, objectMappings)
+                      resolve(connection)
+                    }}
+                  />
+                ) : (
+                  <Button
+                    text='Continue setup'
+                    type='success'
+                    onClick={() => {
+                      setCurrentStep(currentStep + 1)
+                      updateMapping(currentObjectMapping, objectMappings)
+                      setCurrentDeveloperObjectIndex(
+                        currentDeveloperObjectIndex + 1
+                      )
+                      setCurrentStage(MappingStages.Objects)
+                    }}
+                  />
+                )}
+              </div>
+              {removeBranding ? null : <XkitBranding />}
+            </div>
           </div>
         </>
       ) : null

@@ -1,4 +1,4 @@
-import { Connection, Connector, XkitJs } from '@xkit-co/xkit.js'
+import { Connection, Connector, Platform, XkitJs } from '@xkit-co/xkit.js'
 import React, { FC, useCallback, useEffect, useState } from 'react'
 import { friendlyMessage } from '../errors'
 import { Screen } from '../interfaces/screen.interface'
@@ -25,6 +25,7 @@ const App: FC<AppProps> = ({
   reject
 }) => {
   const [screen, setScreen] = useState<Screen>(Screen.Loading)
+  const [platform, setPlatform] = useState<Platform | undefined>(undefined)
   const [connectors, setConnectors] = useState<Connector[]>([])
   const [currentConnector, setCurrentConnector] = useState<
     Connector | undefined
@@ -55,6 +56,13 @@ const App: FC<AppProps> = ({
         await xkit.login(token)
       } catch (error) {
         return reject('Could not login with token provided.')
+      }
+
+      try {
+        const platform = await xkit.getPlatform()
+        setPlatform(platform)
+      } catch (error) {
+        return reject('Could not get the current platform.')
       }
 
       let connectors: Connector[] = []
@@ -142,6 +150,7 @@ const App: FC<AppProps> = ({
             mapping={mapping}
             currentConnection={currentConnection}
             resolve={resolve}
+            removeBranding={platform ? platform.remove_branding : false}
           />
         </div>
       </div>

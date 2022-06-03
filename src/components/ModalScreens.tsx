@@ -5,6 +5,7 @@ import CRMConnector from './CRMConnector'
 import Spinner from './icons/Spinner'
 import MappingScreen from './MappingScreen'
 import ModalLayout from './ModalLayout'
+import XkitBranding from './XkitBranding'
 
 interface ModalScreensProps {
   screen: Screen
@@ -14,6 +15,7 @@ interface ModalScreensProps {
   mapping: unknown | undefined
   currentConnection: Connection | undefined
   resolve: (connection: Connection) => void
+  removeBranding: boolean
 }
 
 const ModalScreens: FC<ModalScreensProps> = ({
@@ -23,12 +25,14 @@ const ModalScreens: FC<ModalScreensProps> = ({
   connect,
   mapping,
   currentConnection,
-  resolve
+  resolve,
+  removeBranding
 }) => {
   switch (screen) {
     case Screen.Loading: // Render skeleton loading layout
       return (
         <ModalLayout
+          removeBranding={true}
           title={
             <div className='animate-pulse h-7 w-36 rounded-lg bg-neutral-300'></div>
           }
@@ -53,8 +57,12 @@ const ModalScreens: FC<ModalScreensProps> = ({
       )
     case Screen.Select:
       return (
-        <ModalLayout title='Select your CRM'>
-          {connectors.map((connector, index, connectors) => (
+        <ModalLayout
+          title='Select your CRM'
+          removeBranding={removeBranding}
+          showBorder={true}
+        >
+          {connectors.map((connector, index) => (
             <CRMConnector
               key={connector.slug}
               connector={connector}
@@ -66,19 +74,26 @@ const ModalScreens: FC<ModalScreensProps> = ({
       )
     case Screen.Connecting:
       return currentConnector ? (
-        <div className='flex flex-col justify-center items-center w-full h-[calc(100%-80px)]'>
-          <div className='w-24 h-24'>
-            <img
-              className='block w-full'
-              src={currentConnector.mark_url}
-              alt={currentConnector.name}
-            />
+        <>
+          <div className='flex flex-col justify-center items-center w-full h-[calc(100%-80px)]'>
+            <div className='w-24 h-24'>
+              <img
+                className='block w-full'
+                src={currentConnector.mark_url}
+                alt={currentConnector.name}
+              />
+            </div>
+            <div className='pt-2 flex items-center gap-2'>
+              <Spinner className='w-6 h-6' />
+              Authorizing
+            </div>
           </div>
-          <div className='pt-2 flex items-center gap-2'>
-            <Spinner className='w-6 h-6' />
-            Authorizing
-          </div>
-        </div>
+          {removeBranding ? null : (
+            <div className='w-full absolute bottom-0 left-0 py-2.5'>
+              <XkitBranding />
+            </div>
+          )}
+        </>
       ) : null
     case Screen.Mapping:
       return currentConnection ? (
@@ -86,6 +101,7 @@ const ModalScreens: FC<ModalScreensProps> = ({
           mapping={mapping}
           connection={currentConnection}
           resolve={resolve}
+          removeBranding={removeBranding}
         />
       ) : null
     default:
