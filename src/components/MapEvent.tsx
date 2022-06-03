@@ -1,5 +1,9 @@
 import React, { FC } from 'react'
-import { getTransformationIndex } from '../functions/mapping'
+import {
+  getTransformationIndex,
+  isSelectableCriteria,
+  selectorsToOptions
+} from '../functions/mapping'
 import {
   Event,
   Field,
@@ -7,7 +11,7 @@ import {
   UserObject
 } from '../interfaces/mapping.interface'
 import Accordion from './Accordion'
-import ComboBox, { selectorsToOptions } from './ComboBox'
+import ComboBox from './ComboBox'
 
 interface MapEventProps {
   event: Event
@@ -79,6 +83,9 @@ const MapEvent: FC<MapEventProps> = ({
                 selected={{ value: selectedValue, static: false }}
                 allowFiltering={true}
                 options={selectorsToOptions(currentUserObject.selectors)}
+                criteria={(option) => {
+                  return isSelectableCriteria(option, field)
+                }}
                 onSelect={(value, type) => {
                   onPayloadFieldSelect(value, type, field, existingFieldIndex)
                 }}

@@ -1,5 +1,9 @@
 import React, { FC, useEffect, useRef, useState } from 'react'
-import { Selector } from '../interfaces/mapping.interface'
+import {
+  findSelectedOption,
+  supportedTransformations
+} from '../functions/mapping'
+import { Criteria, Selector } from '../interfaces/mapping.interface'
 import Caret from './icons/Caret'
 import Minus from './icons/Minus'
 import Plus from './icons/Plus'
@@ -8,6 +12,7 @@ export interface Option {
   label: string
   subLabel?: string
   value: string
+  selector?: Selector
   children?: Option[]
 }
 
@@ -20,10 +25,10 @@ interface ComboBoxProps {
     value?: string
     static: boolean
   }
+  criteria?: (option: Option) => boolean
+  getSelectableCriteria?: (option: Option) => Criteria | undefined
   onSelect: (value: string, type: string) => void
 }
-
-// TODO: Implement functionality: disable options based on type and format groups
 
 const ComboBox: FC<ComboBoxProps> = ({
   placeholder,
@@ -31,6 +36,8 @@ const ComboBox: FC<ComboBoxProps> = ({
   allowFiltering,
   allowStatic,
   selected,
+  criteria,
+  getSelectableCriteria,
   onSelect
 }) => {
   const [visible, setVisible] = useState<boolean>(false)
@@ -190,6 +197,9 @@ const ComboBox: FC<ComboBoxProps> = ({
                     setVisible(false)
                   }}
                   searchFieldText={searchFieldText}
+                  disabled={criteria ? !criteria(option) : false}
+                  criteria={criteria}
+                  getSelectableCriteria={getSelectableCriteria}
                   key={option.value}
                 />
               ))}
@@ -206,6 +216,9 @@ interface OptionItemProps {
   onSelect: (value: string, type: string) => void
   close: () => void
   searchFieldText: string
+  disabled?: boolean
+  criteria?: (option: Option) => boolean
+  getSelectableCriteria?: (option: Option) => Criteria | undefined
 }
 
 const OptionItem: FC<OptionItemProps> = ({
@@ -213,7 +226,10 @@ const OptionItem: FC<OptionItemProps> = ({
   selected,
   onSelect,
   close,
-  searchFieldText
+  searchFieldText,
+  disabled,
+  criteria,
+  getSelectableCriteria
 }) => {
   const [expanded, setExpanded] = useState<boolean>(true)
   let expandButton = null
@@ -249,21 +265,53 @@ const OptionItem: FC<OptionItemProps> = ({
           'text-sm',
           'flex',
           'items-center',
-          'hover:bg-black/5',
-          'cursor-pointer',
+          disabled ? '' : 'hover:bg-black/5 cursor-pointer',
           option.value === selected ? 'bg-black/10' : ''
         ]
           .join(' ')
           .trim()}
         onClick={() => {
-          onSelect(option.value, 'direct')
-          close()
+          if (!disabled) {
+            if (getSelectableCriteria) {
+              const criteria = getSelectableCriteria(option)
+              if (criteria && criteria.transformations) {
+                const intersectionTransformations =
+                  supportedTransformations.filter((transformation) =>
+                    criteria.transformations.includes(transformation)
+                  )
+                if (
+                  intersectionTransformations.length === 1 &&
+                  intersectionTransformations[0] === 'date'
+                ) {
+                  onSelect(option.value, 'date')
+                  close()
+                  return
+                }
+              }
+            }
+            onSelect(option.value, 'direct')
+            close()
+          }
         }}
       >
         {expandButton}
-        <div className='whitespace-nowrap'>{option.label}</div>
+        <div
+          className={['whitespace-nowrap', disabled ? 'text-neutral-400' : '']
+            .join(' ')
+            .trim()}
+        >
+          {option.label}
+        </div>
         {option.subLabel ? (
-          <span className='text-xs text-neutral-500 pl-2'>
+          <span
+            className={[
+              'text-xs',
+              'pl-2',
+              disabled ? 'text-neutral-400' : 'text-neutral-500'
+            ]
+              .join(' ')
+              .trim()}
+          >
             {option.subLabel}
           </span>
         ) : (
@@ -281,6 +329,9 @@ const OptionItem: FC<OptionItemProps> = ({
                 onSelect={onSelect}
                 close={close}
                 searchFieldText={searchFieldText}
+                disabled={criteria ? !criteria(childOption) : false}
+                criteria={criteria}
+                getSelectableCriteria={getSelectableCriteria}
                 key={childOption.value}
               />
             ))}
@@ -302,41 +353,6 @@ const filterOption = (option: Option, filter: string): boolean => {
     }
   }
   return false
-}
-
-const findSelectedOption = (
-  options: Option[],
-  selected: string | undefined
-): Option | undefined => {
-  if (!selected) {
-    return undefined
-  }
-  for (const option of options) {
-    if (option.value === selected) {
-      return option
-    }
-    if (option.children) {
-      const result = findSelectedOption(option.children, selected)
-      if (result) {
-        return result
-      }
-    }
-  }
-  return undefined
-}
-
-export const selectorsToOptions = (selectors: Selector[]): Option[] => {
-  return selectors.map((selector) => {
-    const option: Option = {
-      label: selector.label,
-      subLabel: selector.type_label,
-      value: selector.pointer
-    }
-    if (selector.children && selector.children.length) {
-      option.children = selectorsToOptions(selector.children)
-    }
-    return option
-  })
 }
 
 export default ComboBox

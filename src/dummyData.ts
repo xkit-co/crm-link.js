@@ -20,6 +20,13 @@ export const dummyDeveloperObjects = [
           "Along with the gift, we'll mail a thank you note to the recipient's email address"
       },
       {
+        slug: 'date',
+        type: 'string',
+        format: 'datetime',
+        label: 'Date',
+        description: "We'll put this date on your gift card"
+      },
+      {
         slug: 'address',
         type: 'string',
         label: 'Address',

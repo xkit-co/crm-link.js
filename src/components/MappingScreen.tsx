@@ -2,9 +2,14 @@ import { Connection } from '@xkit-co/xkit.js'
 import React, { FC, useEffect, useState } from 'react'
 import { dummyDeveloperObjects, dummyUserObjects } from '../dummyData'
 import {
+  findSelectedOption,
+  getSelectableCriteria,
   getTransformationIndex,
   isAllEventsSelected,
   isAllFieldsSelected,
+  isSelectableCriteria,
+  selectorsToOptions,
+  supportedTransformations,
   updateMapping
 } from '../functions/mapping'
 import {
@@ -16,7 +21,8 @@ import {
 } from '../interfaces/mapping.interface'
 import { xkitBrowserWindow } from '../interfaces/window.interface'
 import Button from './Button'
-import ComboBox, { selectorsToOptions } from './ComboBox'
+import CheckBox from './CheckBox'
+import ComboBox from './ComboBox'
 import Search from './icons/Search'
 import Tick from './icons/Tick'
 import MapEvent from './MapEvent'
@@ -199,6 +205,7 @@ const MappingScreen: FC<MappingScreenProps> = ({
                           ].static_value
                         selected.static = true
                         break
+                      case 'date':
                       case 'direct':
                       default:
                         selected.value =
@@ -206,6 +213,64 @@ const MappingScreen: FC<MappingScreenProps> = ({
                             existingFieldIndex
                           ].source_pointer
                         break
+                    }
+                  }
+
+                  let dateTransformation = null
+                  if (selected.value && !selected.static) {
+                    const option = findSelectedOption(
+                      selectorsToOptions(
+                        userObjects[currentUserObjectIndex].selectors
+                      ),
+                      selected.value
+                    )
+                    if (option) {
+                      const selectableCriteria = getSelectableCriteria(
+                        option,
+                        field
+                      )
+                      if (
+                        selectableCriteria &&
+                        selectableCriteria.transformations.includes('date')
+                      ) {
+                        let disabled = false
+                        const intersectionTransformations =
+                          supportedTransformations.filter((transformation) =>
+                            selectableCriteria.transformations.includes(
+                              transformation
+                            )
+                          )
+                        if (
+                          intersectionTransformations.length === 1 &&
+                          intersectionTransformations[0] === 'date'
+                        ) {
+                          disabled = true
+                        }
+
+                        dateTransformation = (
+                          <CheckBox
+                            label='Convert to ISO 8601 date format'
+                            checked={
+                              currentObjectMapping.transformations[
+                                existingFieldIndex
+                              ].name === 'date'
+                            }
+                            disabled={disabled}
+                            onChange={(value) => {
+                              if (existingFieldIndex > -1) {
+                                const clonedObjectMapping =
+                                  window.structuredClone<ObjectMapping>(
+                                    currentObjectMapping
+                                  )
+                                clonedObjectMapping.transformations[
+                                  existingFieldIndex
+                                ].name = value ? 'date' : 'direct'
+                                setCurrentObjectMapping(clonedObjectMapping)
+                              }
+                            }}
+                          />
+                        )
+                      }
                     }
                   }
 
@@ -223,6 +288,12 @@ const MappingScreen: FC<MappingScreenProps> = ({
                         )}
                         allowFiltering={true}
                         allowStatic={true}
+                        criteria={(option) => {
+                          return isSelectableCriteria(option, field)
+                        }}
+                        getSelectableCriteria={(option) => {
+                          return getSelectableCriteria(option, field)
+                        }}
                         onSelect={(value, type) => {
                           const transformation: Transformation = {
                             fieldSlug: field.slug,
@@ -232,6 +303,7 @@ const MappingScreen: FC<MappingScreenProps> = ({
                             case 'static':
                               transformation.static_value = value
                               break
+                            case 'date':
                             case 'direct':
                             default:
                               transformation.source_pointer = value
@@ -254,6 +326,7 @@ const MappingScreen: FC<MappingScreenProps> = ({
                           setCurrentObjectMapping(clonedObjectMapping)
                         }}
                       />
+                      {dateTransformation}
                     </div>
                   )
                 }

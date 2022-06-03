@@ -31,10 +31,19 @@ export interface DeveloperObject {
   events?: Event[]
 }
 
+export interface Criteria {
+  input_type: {
+    type: string
+    format: string | null
+  }
+  transformations: string[]
+}
+
 export interface Selector {
   label: string
   pointer: string
   type_label: string
+  input_types: Criteria[]
   children?: Selector[]
 }
 

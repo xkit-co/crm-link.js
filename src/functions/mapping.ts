@@ -1,6 +1,10 @@
+import { Option } from '../components/ComboBox'
 import {
+  Criteria,
   DeveloperObject,
+  Field,
   ObjectMapping,
+  Selector,
   Transformation
 } from '../interfaces/mapping.interface'
 
@@ -77,4 +81,71 @@ export const isAllEventsSelected = (
     }
   }
   return true
+}
+
+export const selectorsToOptions = (selectors: Selector[]): Option[] => {
+  return selectors.map((selector) => {
+    const option: Option = {
+      label: selector.label,
+      subLabel: selector.type_label,
+      value: selector.pointer,
+      selector: selector
+    }
+    if (selector.children && selector.children.length) {
+      option.children = selectorsToOptions(selector.children)
+    }
+    return option
+  })
+}
+
+export const supportedTransformations = ['direct', 'date']
+
+export const getSelectableCriteria = (
+  option: Option,
+  field: Field
+): Criteria | undefined => {
+  if (!option.selector) {
+    return undefined
+  }
+  for (const criteria of option.selector.input_types) {
+    if (
+      criteria.input_type.type === field.type &&
+      (criteria.input_type.format === field.format ||
+        (!criteria.input_type.format && !field.format)) &&
+      criteria.transformations.some((transformation) =>
+        supportedTransformations.includes(transformation)
+      )
+    ) {
+      return criteria
+    }
+  }
+  return undefined
+}
+
+export const isSelectableCriteria = (option: Option, field: Field): boolean => {
+  if (getSelectableCriteria(option, field)) {
+    return true
+  }
+  return false
+}
+
+export const findSelectedOption = (
+  options: Option[],
+  selected: string | undefined
+): Option | undefined => {
+  if (!selected) {
+    return undefined
+  }
+  for (const option of options) {
+    if (option.value === selected) {
+      return option
+    }
+    if (option.children) {
+      const result = findSelectedOption(option.children, selected)
+      if (result) {
+        return result
+      }
+    }
+  }
+  return undefined
 }
