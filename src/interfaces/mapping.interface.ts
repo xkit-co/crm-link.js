@@ -58,22 +58,23 @@ export interface UserObject {
 }
 
 export interface Transformation {
-  fieldSlug: string
+  field: {
+    slug: string
+  }
   name: string
   source_pointer?: string
   static_value?: string
 }
 
 export interface ObjectMapping {
-  developerObjectId: number
-  userObjectId: number
+  crm_object_id: number
+  api_object_id: number
   transformations: Transformation[]
-  events: {
-    slug: string
-    type: string
-    label: string
-    description: string
-    selectedActionType: string
+  event_actions: {
+    event: {
+      slug: string
+    }
+    action_type: string
     transformations: Transformation[]
   }[]
 }

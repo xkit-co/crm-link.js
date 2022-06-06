@@ -126,9 +126,9 @@ const MappingScreen: FC<MappingScreenProps> = ({
               {filteredUserObjects.map((userObject, index) => {
                 const existingMapping = objectMappings.find(
                   (objectMapping) =>
-                    objectMapping.developerObjectId ===
+                    objectMapping.crm_object_id ===
                       developerObjects[currentDeveloperObjectIndex].id &&
-                    objectMapping.userObjectId === userObject.id
+                    objectMapping.api_object_id === userObject.id
                 )
 
                 return (
@@ -153,11 +153,11 @@ const MappingScreen: FC<MappingScreenProps> = ({
                         setCurrentObjectMapping(existingMapping)
                       } else {
                         setCurrentObjectMapping({
-                          developerObjectId:
+                          crm_object_id:
                             developerObjects[currentDeveloperObjectIndex].id,
-                          userObjectId: userObject.id,
+                          api_object_id: userObject.id,
                           transformations: [],
-                          events: []
+                          event_actions: []
                         })
                       }
                       setCurrentStep(currentStep + 1)
@@ -318,7 +318,9 @@ const MappingScreen: FC<MappingScreenProps> = ({
                           }}
                           onSelect={(value, type) => {
                             const transformation: Transformation = {
-                              fieldSlug: field.slug,
+                              field: {
+                                slug: field.slug
+                              },
                               name: type
                             }
                             switch (type) {
@@ -403,8 +405,9 @@ const MappingScreen: FC<MappingScreenProps> = ({
                 {developerObjects[currentDeveloperObjectIndex].events?.map(
                   (event, index) => {
                     const existingEventIndex =
-                      currentObjectMapping.events.findIndex(
-                        (existingEvent) => existingEvent.slug === event.slug
+                      currentObjectMapping.event_actions.findIndex(
+                        (existingEvent) =>
+                          existingEvent.event.slug === event.slug
                       )
                     return (
                       <MapEvent
@@ -415,11 +418,10 @@ const MappingScreen: FC<MappingScreenProps> = ({
                         existingEventIndex={existingEventIndex}
                         onEventTypeSelect={(value) => {
                           const newEvent = {
-                            slug: event.slug,
-                            type: event.type,
-                            label: event.label,
-                            description: event.description,
-                            selectedActionType: value,
+                            event: {
+                              slug: event.slug
+                            },
+                            action_type: value,
                             transformations: []
                           }
                           const clonedObjectMapping =
@@ -427,14 +429,17 @@ const MappingScreen: FC<MappingScreenProps> = ({
                               currentObjectMapping
                             )
                           if (existingEventIndex > -1) {
-                            clonedObjectMapping.events[existingEventIndex] = {
+                            clonedObjectMapping.event_actions[
+                              existingEventIndex
+                            ] = {
                               ...newEvent,
                               transformations:
-                                clonedObjectMapping.events[existingEventIndex]
-                                  .transformations
+                                clonedObjectMapping.event_actions[
+                                  existingEventIndex
+                                ].transformations
                             }
                           } else {
-                            clonedObjectMapping.events.push(newEvent)
+                            clonedObjectMapping.event_actions.push(newEvent)
                           }
                           setCurrentObjectMapping(clonedObjectMapping)
                         }}
@@ -445,7 +450,7 @@ const MappingScreen: FC<MappingScreenProps> = ({
                           existingFieldIndex
                         ) => {
                           const transformation: Transformation = {
-                            fieldSlug: payloadField.slug,
+                            field: { slug: payloadField.slug },
                             name: type
                           }
                           switch (type) {
@@ -463,12 +468,12 @@ const MappingScreen: FC<MappingScreenProps> = ({
                               currentObjectMapping
                             )
                           if (existingFieldIndex > -1) {
-                            clonedObjectMapping.events[
+                            clonedObjectMapping.event_actions[
                               existingEventIndex
                             ].transformations[existingFieldIndex] =
                               transformation
                           } else {
-                            clonedObjectMapping.events[
+                            clonedObjectMapping.event_actions[
                               existingEventIndex
                             ].transformations.push(transformation)
                           }
@@ -486,7 +491,7 @@ const MappingScreen: FC<MappingScreenProps> = ({
                   type={
                     isAllEventsSelected(
                       developerObjects[currentDeveloperObjectIndex],
-                      currentObjectMapping.events
+                      currentObjectMapping.event_actions
                     )
                       ? 'primary'
                       : 'disabled'
@@ -495,7 +500,7 @@ const MappingScreen: FC<MappingScreenProps> = ({
                     if (
                       isAllEventsSelected(
                         developerObjects[currentDeveloperObjectIndex],
-                        currentObjectMapping.events
+                        currentObjectMapping.event_actions
                       )
                     ) {
                       setCurrentStep(currentStep + 1)

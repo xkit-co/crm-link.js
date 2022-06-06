@@ -39,7 +39,7 @@ const MapEvent: FC<MapEventProps> = ({
 }) => {
   const selectedActionType =
     existingEventIndex > -1
-      ? currentObjectMapping.events[existingEventIndex].selectedActionType
+      ? currentObjectMapping.event_actions[existingEventIndex].action_type
       : undefined
 
   let eventHandlingForm = <div></div>
@@ -49,25 +49,25 @@ const MapEvent: FC<MapEventProps> = ({
         {event.fields.map((field) => {
           const existingFieldIndex = getTransformationIndex(
             field.slug,
-            currentObjectMapping.events[existingEventIndex].transformations
+            currentObjectMapping.event_actions[existingEventIndex]
+              .transformations
           )
           let selectedValue = undefined
           if (existingFieldIndex > -1) {
             switch (
-              currentObjectMapping.events[existingEventIndex].transformations[
-                existingFieldIndex
-              ].name
+              currentObjectMapping.event_actions[existingEventIndex]
+                .transformations[existingFieldIndex].name
             ) {
               case 'static':
                 selectedValue =
-                  currentObjectMapping.events[existingEventIndex]
+                  currentObjectMapping.event_actions[existingEventIndex]
                     .transformations[existingFieldIndex].static_value
                 break
               case 'date':
               case 'direct':
               default:
                 selectedValue =
-                  currentObjectMapping.events[existingEventIndex]
+                  currentObjectMapping.event_actions[existingEventIndex]
                     .transformations[existingFieldIndex].source_pointer
                 break
             }

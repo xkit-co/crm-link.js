@@ -14,9 +14,8 @@ export const updateMapping = (
 ) => {
   const existingMappingIndex = objectMappings.findIndex(
     (objectMapping) =>
-      objectMapping.developerObjectId ===
-        currentObjectMapping.developerObjectId &&
-      objectMapping.userObjectId === currentObjectMapping.userObjectId
+      objectMapping.crm_object_id === currentObjectMapping.crm_object_id &&
+      objectMapping.api_object_id === currentObjectMapping.api_object_id
   )
   if (existingMappingIndex > -1) {
     objectMappings[existingMappingIndex] = currentObjectMapping
@@ -30,7 +29,7 @@ export const getTransformationIndex = (
   transformations: Transformation[]
 ) => {
   return transformations.findIndex(
-    (transformation) => transformation.fieldSlug === fieldSlug
+    (transformation) => transformation.field.slug === fieldSlug
   )
 }
 
@@ -51,21 +50,19 @@ export const isAllFieldsSelected = (
 
 export const isAllEventsSelected = (
   developerObject: DeveloperObject,
-  objectMappingEvents: ObjectMapping['events']
+  objectMappingEvents: ObjectMapping['event_actions']
 ) => {
   if (!developerObject.events) {
     return true
   }
   for (const event of developerObject.events || []) {
     const existingEventIndex = objectMappingEvents.findIndex(
-      (objectMappingEvent) => objectMappingEvent.slug === event.slug
+      (objectMappingEvent) => objectMappingEvent.event.slug === event.slug
     )
     if (!(existingEventIndex > -1)) {
       return false
     }
-    if (
-      objectMappingEvents[existingEventIndex].selectedActionType === 'update'
-    ) {
+    if (objectMappingEvents[existingEventIndex].action_type === 'update') {
       for (const field of event.fields) {
         if (
           !(
