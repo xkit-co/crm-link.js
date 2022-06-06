@@ -550,7 +550,6 @@ const MappingScreen: FC<MappingScreenProps> = ({
                     text='Finish setup'
                     type='success'
                     onClick={() => {
-                      setCurrentStep(0)
                       updateMapping(currentObjectMapping, objectMappings)
                       resolve(connection)
                     }}

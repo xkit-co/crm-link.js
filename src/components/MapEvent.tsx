@@ -46,7 +46,7 @@ const MapEvent: FC<MapEventProps> = ({
   if (selectedActionType === 'update') {
     eventHandlingForm = (
       <div className='pl-6'>
-        {event.payloadFields.map((field) => {
+        {event.fields.map((field) => {
           const existingFieldIndex = getTransformationIndex(
             field.slug,
             currentObjectMapping.events[existingEventIndex].transformations
@@ -63,6 +63,7 @@ const MapEvent: FC<MapEventProps> = ({
                   currentObjectMapping.events[existingEventIndex]
                     .transformations[existingFieldIndex].static_value
                 break
+              case 'date':
               case 'direct':
               default:
                 selectedValue =

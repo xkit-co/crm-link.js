@@ -8,10 +8,12 @@ export enum MappingStages {
 
 export interface Field {
   slug: string
-  type: string
-  format?: string
   label: string
   description: string
+  simple_type: {
+    type: string
+    format: string | null
+  }
 }
 
 export interface Event {
@@ -19,7 +21,7 @@ export interface Event {
   type: string
   label: string
   description: string
-  payloadFields: Field[]
+  fields: Field[]
 }
 
 export interface DeveloperObject {

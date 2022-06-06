@@ -8,29 +8,40 @@ export const dummyDeveloperObjects = [
     fields: [
       {
         slug: 'name',
-        type: 'string',
         label: 'Name',
-        description: 'Full name of the person'
+        description: 'Full name of the person',
+        simple_type: {
+          type: 'string',
+          format: null
+        }
       },
       {
         slug: 'email',
-        type: 'string',
         label: 'Email',
         description:
-          "Along with the gift, we'll mail a thank you note to the recipient's email address"
+          "Along with the gift, we'll mail a thank you note to the recipient's email address",
+        simple_type: {
+          type: 'string',
+          format: null
+        }
       },
       {
         slug: 'date',
-        type: 'string',
-        format: 'datetime',
         label: 'Date',
-        description: "We'll put this date on your gift card"
+        description: "We'll put this date on your gift card",
+        simple_type: {
+          type: 'string',
+          format: 'datetime'
+        }
       },
       {
         slug: 'address',
-        type: 'string',
         label: 'Address',
-        description: "This is where we'll deliver the gift"
+        description: "This is where we'll deliver the gift",
+        simple_type: {
+          type: 'string',
+          format: null
+        }
       }
     ],
     events: [
@@ -39,26 +50,34 @@ export const dummyDeveloperObjects = [
         type: 'update',
         label: 'Person Updated',
         description: 'Occurs when relevant properties of a Person change',
-        payloadFields: [
+        fields: [
           {
             slug: 'name',
-            type: 'string',
             label: 'Name',
-            description: 'Updated full name of the person'
+            description: 'Updated full name of the person',
+            simple_type: {
+              type: 'string',
+              format: null
+            }
           },
           {
             slug: 'address',
-            type: 'string',
             label: 'Address',
-            description: 'Updated mailing address of the person'
+            description: 'Updated mailing address of the person',
+            simple_type: {
+              type: 'string',
+              format: null
+            }
           },
           {
             slug: 'updated_at',
-            type: 'string',
-            format: 'datetime',
             label: 'Person Last Update Time',
             description:
-              'ISO 8601 Date/Time of the last update made to the Person'
+              'ISO 8601 Date/Time of the last update made to the Person',
+            simple_type: {
+              type: 'string',
+              format: 'datetime'
+            }
           }
         ]
       },
@@ -67,24 +86,33 @@ export const dummyDeveloperObjects = [
         type: 'create',
         label: 'Person Created',
         description: 'Occurs when new Person object is created',
-        payloadFields: [
+        fields: [
           {
             slug: 'name',
-            type: 'string',
             label: 'Name',
-            description: 'Full name of the person created'
+            description: 'Full name of the person created',
+            simple_type: {
+              type: 'string',
+              format: null
+            }
           },
           {
             slug: 'email',
-            type: 'string',
             label: 'Email',
-            description: 'Email address of the person created'
+            description: 'Email address of the person created',
+            simple_type: {
+              type: 'string',
+              format: null
+            }
           },
           {
             slug: 'address',
-            type: 'string',
             label: 'Address',
-            description: 'Mailing address of the person created'
+            description: 'Mailing address of the person created',
+            simple_type: {
+              type: 'string',
+              format: null
+            }
           }
         ]
       }

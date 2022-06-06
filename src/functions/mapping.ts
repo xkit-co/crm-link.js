@@ -66,7 +66,7 @@ export const isAllEventsSelected = (
     if (
       objectMappingEvents[existingEventIndex].selectedActionType === 'update'
     ) {
-      for (const field of event.payloadFields) {
+      for (const field of event.fields) {
         if (
           !(
             getTransformationIndex(
@@ -109,9 +109,9 @@ export const getSelectableCriteria = (
   }
   for (const criteria of option.selector.input_types) {
     if (
-      criteria.input_type.type === field.type &&
-      (criteria.input_type.format === field.format ||
-        (!criteria.input_type.format && !field.format)) &&
+      criteria.input_type.type === field.simple_type.type &&
+      (criteria.input_type.format === field.simple_type.format ||
+        (!criteria.input_type.format && !field.simple_type.format)) &&
       criteria.transformations.some((transformation) =>
         supportedTransformations.includes(transformation)
       )
