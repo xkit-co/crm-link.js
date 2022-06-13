@@ -7,7 +7,10 @@ import {
   getTransformationIndex,
   isAllEventsSelected,
   isAllFieldsSelected,
+  isAllObjectsSelected,
+  isObjectSelected,
   isSelectableCriteria,
+  removeMapping,
   selectorsToOptions,
   supportedTransformations,
   updateMapping
@@ -23,20 +26,22 @@ import { xkitBrowserWindow } from '../interfaces/window.interface'
 import Button from './Button'
 import CheckBox from './CheckBox'
 import ComboBox from './ComboBox'
+import ConnectionStage from './ConnectionStage'
 import Search from './icons/Search'
 import Tick from './icons/Tick'
+import Trash from './icons/Trash'
+import Warn from './icons/Warn'
 import MapEvent from './MapEvent'
-import StepIndicator from './StepIndicator'
 import XkitBranding from './XkitBranding'
 
 declare const window: xkitBrowserWindow
-
-const objectMappings: ObjectMapping[] = []
 
 interface MappingScreenProps {
   mapping: unknown | undefined
   connection: Connection
   resolve: (connection: Connection) => void
+  reconnect: (connection: Connection) => Promise<void>
+  disconnect: (connection: Connection) => Promise<void>
   removeBranding: boolean
 }
 
@@ -44,8 +49,11 @@ const MappingScreen: FC<MappingScreenProps> = ({
   mapping,
   connection,
   resolve,
+  reconnect,
+  disconnect,
   removeBranding
 }) => {
+  const [objectMappings, setObjectMappings] = useState<ObjectMapping[]>([])
   const [currentObjectMapping, setCurrentObjectMapping] = useState<
     ObjectMapping | undefined
   >(undefined)
@@ -65,8 +73,6 @@ const MappingScreen: FC<MappingScreenProps> = ({
   )
   const [currentUserObjectIndex, setCurrentUserObjectIndex] =
     useState<number>(0)
-  const [maxSteps, setMaxSteps] = useState<number>(0)
-  const [currentStep, setCurrentStep] = useState<number>(0)
 
   useEffect(() => {
     setDeveloperObjects(dummyDeveloperObjects)
@@ -74,389 +80,500 @@ const MappingScreen: FC<MappingScreenProps> = ({
     setFilteredUserObjects(dummyUserObjects)
     setCurrentDeveloperObjectIndex(0)
     setCurrentUserObjectIndex(0)
-    setCurrentStage(MappingStages.Objects)
-
-    let countSteps = 0
-    for (const object of dummyDeveloperObjects) {
-      countSteps = countSteps + 2
-      if (object.fields) {
-        countSteps = countSteps + 1
-      }
-      if (object.events) {
-        countSteps = countSteps + 1
-      }
-    }
-    setMaxSteps(countSteps)
-    setCurrentStep(1)
+    setCurrentStage(MappingStages.Configuration)
   }, [mapping, connection])
 
   switch (currentStage) {
-    case MappingStages.Objects:
-      return developerObjects && userObjects ? (
-        <>
-          <StepIndicator currentStep={currentStep} maxSteps={maxSteps} />
-          <div className='flex flex-col h-[calc(100%-40px)]'>
-            <div className='text-sm py-2.5 px-6'>
-              Choose an object from your CRM that you would like to map to{' '}
-              {developerObjects[currentDeveloperObjectIndex].label}
+    case MappingStages.Configuration:
+      return developerObjects && connection ? (
+        <div className='flex flex-col h-[calc(100%-40px)]'>
+          <div className='text-sm pt-2.5 pb-4 px-6'>Your CRM connection</div>
+          <div
+            className='mb-6 border-b border-t border-l-0 border-r-0 border-solid border-neutral-200 hover:bg-black/5 cursor-pointer'
+            onClick={() => {
+              setCurrentStage(MappingStages.Connection)
+            }}
+          >
+            <div className='px-6 py-2.5 flex items-center justify-between'>
+              <div className='break-words'>{connection.connector.name}</div>
+              {connection.enabled &&
+              connection.authorization &&
+              connection.authorization.status !== 'error' ? (
+                <Tick className='h-4 w-4 shrink-0 pl-3 fill-emerald-500' />
+              ) : (
+                <Warn className='h-4 w-4 shrink-0 pl-3 fill-yellow-500' />
+              )}
             </div>
-            <div className='text-xs text-neutral-500 py-1 px-6'>
-              {developerObjects[currentDeveloperObjectIndex].description}
-            </div>
-            <div className='mt-3 border-b border-t border-l-0 border-r-0 border-solid border-neutral-200'>
-              <div className='px-6 flex items-center'>
-                <Search className='w-5 h-5 shrink-0 fill-neutral-400' />
-                <input
-                  className='px-3 py-2 block w-full outline-none border-none text-base placeholder:text-neutral-500'
-                  placeholder='Filter'
-                  type='text'
-                  onChange={(event) => {
-                    setFilteredUserObjects(
-                      userObjects.filter((userObject) =>
-                        userObject.label_one
-                          .toLowerCase()
-                          .includes(event.target.value.toLowerCase())
+          </div>
+          <div className='text-sm pt-2.5 pb-4 px-6'>
+            These objects require mapping to your CRM
+          </div>
+          <div className='pb-2.5 flex flex-col grow overflow-y-auto'>
+            <div className='grow'>
+              {developerObjects.map((developerObject, index) => (
+                <div
+                  key={developerObject.id}
+                  className={[
+                    index === 0 ? 'border-t' : 'border-t-0',
+                    'border-b',
+                    'border-l-0',
+                    'border-r-0',
+                    'border-solid',
+                    'border-neutral-200',
+                    'hover:bg-black/5',
+                    'cursor-pointer'
+                  ]
+                    .join(' ')
+                    .trim()}
+                  onClick={() => {
+                    setCurrentDeveloperObjectIndex(index)
+                    if (
+                      objectMappings.find(
+                        (objectMapping) =>
+                          objectMapping.crm_object_id === developerObject.id
                       )
-                    )
+                    ) {
+                      setCurrentStage(MappingStages.Mappings)
+                    } else {
+                      setCurrentStage(MappingStages.Objects)
+                    }
                   }}
-                />
-              </div>
+                >
+                  <div className='px-6 py-2.5 flex items-center justify-between'>
+                    <div className='break-words'>{developerObject.label}</div>
+                    {isObjectSelected(developerObject, objectMappings) ? (
+                      <Tick className='h-4 w-4 shrink-0 pl-3 fill-emerald-500' />
+                    ) : (
+                      <Warn className='h-4 w-4 shrink-0 pl-3 fill-yellow-500' />
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className='border-b border-t-0 border-l-0 border-r-0 border-solid border-neutral-200 overflow-y-auto'>
-              {filteredUserObjects.map((userObject, index) => {
-                const existingMapping = objectMappings.find(
+            <div className='px-6 pt-6 pb-4'>
+              <Button
+                text='Finish'
+                type={
+                  connection.enabled &&
+                  connection.authorization &&
+                  connection.authorization.status !== 'error' &&
+                  isAllObjectsSelected(developerObjects, objectMappings)
+                    ? 'primary'
+                    : 'disabled'
+                }
+                onClick={() => {
+                  if (isAllObjectsSelected(developerObjects, objectMappings)) {
+                    setCurrentStage(MappingStages.Configuration)
+                    resolve(connection)
+                  }
+                }}
+              />
+            </div>
+            {removeBranding ? null : <XkitBranding />}
+          </div>
+        </div>
+      ) : null
+    case MappingStages.Connection:
+      return connection ? (
+        <ConnectionStage
+          connection={connection}
+          reconnect={reconnect}
+          disconnect={disconnect}
+          onDone={() => {
+            setCurrentStage(MappingStages.Configuration)
+          }}
+          removeBranding={removeBranding}
+        />
+      ) : null
+    case MappingStages.Mappings:
+      return developerObjects && userObjects ? (
+        <div className='flex flex-col h-[calc(100%-40px)]'>
+          <div className='text-sm pt-2.5 pb-4 px-6'>
+            The following object from your CRM is mapped to{' '}
+            {developerObjects[currentDeveloperObjectIndex].label}
+          </div>
+          <div className='pb-2.5 flex flex-col grow overflow-y-auto'>
+            <div className='grow'>
+              {objectMappings
+                .filter(
                   (objectMapping) =>
                     objectMapping.crm_object_id ===
-                      developerObjects[currentDeveloperObjectIndex].id &&
-                    objectMapping.api_object_id === userObject.id
+                    developerObjects[currentDeveloperObjectIndex].id
                 )
+                .map((objectMapping, index, displayedObjectMappings) => {
+                  const userObjectIndex = userObjects.findIndex(
+                    (userObject) =>
+                      userObject.id === objectMapping.api_object_id
+                  )
+                  if (userObjectIndex > -1) {
+                    return (
+                      <div
+                        key={userObjects[userObjectIndex].id}
+                        className={[
+                          displayedObjectMappings.length > 1 &&
+                          index !== displayedObjectMappings.length - 1
+                            ? 'border-b-0'
+                            : 'border-b',
+                          'border-t',
+                          'border-l-0',
+                          'border-r-0',
+                          'border-solid',
+                          'border-neutral-200'
+                        ]
+                          .join(' ')
+                          .trim()}
+                      >
+                        <div
+                          className={[
+                            'px-6',
+                            'py-2.5',
+                            'flex',
+                            'items-center',
+                            'justify-between',
+                            'border-t-0',
+                            'border-l-0',
+                            'border-r-0',
+                            'border-solid',
+                            'border-neutral-100',
+                            developerObjects[currentDeveloperObjectIndex].fields
+                              ? 'border-b'
+                              : 'border-b-0'
+                          ]
+                            .join(' ')
+                            .trim()}
+                        >
+                          <div className='break-words'>
+                            {userObjects[userObjectIndex].label_one}
+                          </div>
+                          <Trash
+                            className='h-4 w-4 shrink-0 pl-3 fill-red-500 cursor-pointer'
+                            onClick={() => {
+                              removeMapping(
+                                objectMapping,
+                                objectMappings,
+                                setObjectMappings
+                              )
+                              if (displayedObjectMappings.length === 1) {
+                                setCurrentStage(MappingStages.Objects)
+                              }
+                            }}
+                          />
+                        </div>
+                        {developerObjects[currentDeveloperObjectIndex]
+                          .fields ? (
+                          <div
+                            className={[
+                              'pl-9',
+                              'pr-6',
+                              'py-2.5',
+                              'flex',
+                              'items-center',
+                              'justify-between',
+                              'hover:bg-black/5',
+                              'cursor-pointer',
+                              'border-t-0',
+                              'border-l-0',
+                              'border-r-0',
+                              'border-solid',
+                              'border-neutral-100',
+                              developerObjects[currentDeveloperObjectIndex]
+                                .events
+                                ? 'border-b'
+                                : 'border-b-0'
+                            ]
+                              .join(' ')
+                              .trim()}
+                            onClick={() => {
+                              setCurrentUserObjectIndex(userObjectIndex)
+                              setCurrentObjectMapping(objectMapping)
+                              setCurrentStage(MappingStages.Fields)
+                            }}
+                          >
+                            <div className='text-sm break-words'>Read</div>
+                            {isAllFieldsSelected(
+                              developerObjects[currentDeveloperObjectIndex],
+                              objectMapping.transformations
+                            ) ? (
+                              <Tick className='h-4 w-4 shrink-0 pl-3 fill-emerald-500' />
+                            ) : (
+                              <Warn className='h-4 w-4 shrink-0 pl-3 fill-yellow-500' />
+                            )}
+                          </div>
+                        ) : null}
+                        {developerObjects[currentDeveloperObjectIndex]
+                          .events ? (
+                          <div
+                            className='pl-9 pr-6 py-2.5 flex items-center justify-between hover:bg-black/5 cursor-pointer'
+                            onClick={() => {
+                              setCurrentUserObjectIndex(userObjectIndex)
+                              setCurrentObjectMapping(objectMapping)
+                              setCurrentStage(MappingStages.Events)
+                            }}
+                          >
+                            <div className='text-sm break-words'>Write</div>
+                            {isAllEventsSelected(
+                              developerObjects[currentDeveloperObjectIndex],
+                              objectMapping.event_actions
+                            ) ? (
+                              <Tick className='h-4 w-4 shrink-0 pl-3 fill-emerald-500' />
+                            ) : (
+                              <Warn className='h-4 w-4 shrink-0 pl-3 fill-yellow-500' />
+                            )}
+                          </div>
+                        ) : null}
+                      </div>
+                    )
+                  } else {
+                    return null
+                  }
+                })}
+            </div>
+            <div className='px-6 pt-6 pb-4'>
+              <Button
+                text='Done'
+                type={
+                  isObjectSelected(
+                    developerObjects[currentDeveloperObjectIndex],
+                    objectMappings
+                  )
+                    ? 'primary'
+                    : 'disabled'
+                }
+                onClick={() => {
+                  if (
+                    isObjectSelected(
+                      developerObjects[currentDeveloperObjectIndex],
+                      objectMappings
+                    )
+                  ) {
+                    setCurrentStage(MappingStages.Configuration)
+                  }
+                }}
+              />
+            </div>
+            {removeBranding ? null : <XkitBranding />}
+          </div>
+        </div>
+      ) : null
+    case MappingStages.Objects:
+      return developerObjects && userObjects ? (
+        <div className='flex flex-col h-[calc(100%-40px)]'>
+          <div className='text-sm py-2.5 px-6'>
+            Choose an object from your CRM that you would like to map to{' '}
+            {developerObjects[currentDeveloperObjectIndex].label}
+          </div>
+          <div className='text-xs text-neutral-500 py-1 px-6'>
+            {developerObjects[currentDeveloperObjectIndex].description}
+          </div>
+          <div className='mt-3 border-b-0 border-t border-l-0 border-r-0 border-solid border-neutral-200'>
+            <div className='px-6 flex items-center'>
+              <Search className='w-5 h-5 shrink-0 fill-neutral-400' />
+              <input
+                className='px-3 py-2 block w-full outline-none border-none text-base placeholder:text-neutral-500'
+                placeholder='Filter'
+                type='text'
+                onChange={(event) => {
+                  setFilteredUserObjects(
+                    userObjects.filter((userObject) =>
+                      userObject.label_one
+                        .toLowerCase()
+                        .includes(event.target.value.toLowerCase())
+                    )
+                  )
+                }}
+              />
+            </div>
+          </div>
+          <div className='grow border-b border-t border-l-0 border-r-0 border-solid border-neutral-200 overflow-y-auto'>
+            {filteredUserObjects.map((filteredUserObject) => {
+              const existingMapping = objectMappings.find(
+                (objectMapping) =>
+                  objectMapping.crm_object_id ===
+                    developerObjects[currentDeveloperObjectIndex].id &&
+                  objectMapping.api_object_id === filteredUserObject.id
+              )
 
-                return (
-                  <div
-                    key={userObject.id}
-                    className={[
-                      index === filteredUserObjects.length - 1
-                        ? 'border-b-0'
-                        : 'border-b',
-                      'border-t-0',
-                      'border-l-0',
-                      'border-r-0',
-                      'border-solid',
-                      'border-neutral-200',
-                      'hover:bg-black/5',
-                      'cursor-pointer'
-                    ]
-                      .join(' ')
-                      .trim()}
-                    onClick={() => {
-                      if (existingMapping) {
-                        setCurrentObjectMapping(existingMapping)
-                      } else {
-                        setCurrentObjectMapping({
-                          crm_object_id:
-                            developerObjects[currentDeveloperObjectIndex].id,
-                          api_object_id: userObject.id,
-                          transformations: [],
-                          event_actions: []
-                        })
-                      }
-                      setCurrentStep(currentStep + 1)
-                      setCurrentUserObjectIndex(index)
-                      if (
-                        developerObjects[currentDeveloperObjectIndex].fields
-                      ) {
-                        setCurrentStage(MappingStages.Fields)
-                      } else if (
-                        developerObjects[currentDeveloperObjectIndex].events
-                      ) {
-                        setCurrentStage(MappingStages.Events)
-                      } else {
-                        setCurrentStage(MappingStages.RepeatDialog)
-                      }
-                    }}
-                  >
-                    <div className='px-6 py-2.5 flex items-center justify-between'>
-                      <div className='break-words'>{userObject.label_one}</div>
-                      {existingMapping ? (
-                        <Tick className='h-4 w-4 shrink-0 pl-3' />
-                      ) : null}
+              return existingMapping ? null : (
+                <div
+                  key={filteredUserObject.id}
+                  className={[
+                    'border-b',
+                    'border-t-0',
+                    'border-l-0',
+                    'border-r-0',
+                    'border-solid',
+                    'border-neutral-200',
+                    'hover:bg-black/5',
+                    'cursor-pointer'
+                  ]
+                    .join(' ')
+                    .trim()}
+                  onClick={() => {
+                    const newObjectMapping = {
+                      crm_object_id:
+                        developerObjects[currentDeveloperObjectIndex].id,
+                      api_object_id: filteredUserObject.id,
+                      transformations: [],
+                      event_actions: []
+                    }
+                    setCurrentObjectMapping(newObjectMapping)
+                    updateMapping(
+                      newObjectMapping,
+                      objectMappings,
+                      setObjectMappings
+                    )
+                    setCurrentStage(MappingStages.Mappings)
+                  }}
+                >
+                  <div className='px-6 py-2.5 flex items-center justify-between'>
+                    <div className='break-words'>
+                      {filteredUserObject.label_one}
                     </div>
                   </div>
-                )
-              })}
-            </div>
-            {removeBranding ? null : (
-              <div className='py-2.5'>
-                <XkitBranding />
-              </div>
-            )}
+                </div>
+              )
+            })}
           </div>
-        </>
+          {removeBranding ? null : (
+            <div className='py-2.5'>
+              <XkitBranding />
+            </div>
+          )}
+        </div>
       ) : null
     case MappingStages.Fields:
       return developerObjects && userObjects && currentObjectMapping ? (
-        <>
-          <StepIndicator currentStep={currentStep} maxSteps={maxSteps} />
-          <div className='flex flex-col h-[calc(100%-40px)]'>
-            <div className='text-sm pt-2.5 pb-4 px-6'>
-              Choose fields from {userObjects[currentUserObjectIndex].label_one}{' '}
-              that correspond to the given fields for{' '}
-              {developerObjects[currentDeveloperObjectIndex].label}
-            </div>
-            <div className='pb-2.5 px-6 grow flex flex-col overflow-y-auto'>
-              <div className='grow'>
-                {developerObjects[currentDeveloperObjectIndex].fields?.map(
-                  (field) => {
-                    const existingFieldIndex = getTransformationIndex(
-                      field.slug,
-                      currentObjectMapping.transformations
-                    )
-                    const selected: {
-                      value: string | undefined
-                      static: boolean
-                    } = { value: undefined, static: false }
-                    if (existingFieldIndex > -1) {
-                      switch (
-                        currentObjectMapping.transformations[existingFieldIndex]
-                          .name
-                      ) {
-                        case 'static':
-                          selected.value =
-                            currentObjectMapping.transformations[
-                              existingFieldIndex
-                            ].static_value
-                          selected.static = true
-                          break
-                        case 'date':
-                        case 'direct':
-                        default:
-                          selected.value =
-                            currentObjectMapping.transformations[
-                              existingFieldIndex
-                            ].source_pointer
-                          break
-                      }
-                    }
-
-                    let dateTransformation = null
-                    if (selected.value && !selected.static) {
-                      const option = findSelectedOption(
-                        selectorsToOptions(
-                          userObjects[currentUserObjectIndex].selectors
-                        ),
-                        selected.value
-                      )
-                      if (option) {
-                        const selectableCriteria = getSelectableCriteria(
-                          option,
-                          field
-                        )
-                        if (
-                          selectableCriteria &&
-                          selectableCriteria.transformations.includes('date')
-                        ) {
-                          let disabled = false
-                          const intersectionTransformations =
-                            supportedTransformations.filter((transformation) =>
-                              selectableCriteria.transformations.includes(
-                                transformation
-                              )
-                            )
-                          if (
-                            intersectionTransformations.length === 1 &&
-                            intersectionTransformations[0] === 'date'
-                          ) {
-                            disabled = true
-                          }
-
-                          dateTransformation = (
-                            <CheckBox
-                              label='Convert to ISO 8601 date format'
-                              checked={
-                                currentObjectMapping.transformations[
-                                  existingFieldIndex
-                                ].name === 'date'
-                              }
-                              disabled={disabled}
-                              onChange={(value) => {
-                                if (existingFieldIndex > -1) {
-                                  const clonedObjectMapping =
-                                    window.structuredClone<ObjectMapping>(
-                                      currentObjectMapping
-                                    )
-                                  clonedObjectMapping.transformations[
-                                    existingFieldIndex
-                                  ].name = value ? 'date' : 'direct'
-                                  setCurrentObjectMapping(clonedObjectMapping)
-                                }
-                              }}
-                            />
-                          )
-                        }
-                      }
-                    }
-
-                    return (
-                      <div className='py-3' key={field.slug}>
-                        <div>{field.label}</div>
-                        <div className='text-xs text-neutral-500 py-2.5'>
-                          {field.description}
-                        </div>
-                        <ComboBox
-                          placeholder='Choose data'
-                          selected={selected}
-                          options={selectorsToOptions(
-                            userObjects[currentUserObjectIndex].selectors
-                          )}
-                          allowFiltering={true}
-                          allowStatic={true}
-                          criteria={(option) => {
-                            return isSelectableCriteria(option, field)
-                          }}
-                          getSelectableCriteria={(option) => {
-                            return getSelectableCriteria(option, field)
-                          }}
-                          onSelect={(value, type) => {
-                            const transformation: Transformation = {
-                              field: {
-                                slug: field.slug
-                              },
-                              name: type
-                            }
-                            switch (type) {
-                              case 'static':
-                                transformation.static_value = value
-                                break
-                              case 'date':
-                              case 'direct':
-                              default:
-                                transformation.source_pointer = value
-                                break
-                            }
-
-                            const clonedObjectMapping =
-                              window.structuredClone<ObjectMapping>(
-                                currentObjectMapping
-                              )
-                            if (existingFieldIndex > -1) {
-                              clonedObjectMapping.transformations[
-                                existingFieldIndex
-                              ] = transformation
-                            } else {
-                              clonedObjectMapping.transformations.push(
-                                transformation
-                              )
-                            }
-                            setCurrentObjectMapping(clonedObjectMapping)
-                          }}
-                        />
-                        {dateTransformation}
-                      </div>
-                    )
-                  }
-                )}
-              </div>
-              <div className='pt-6 pb-4'>
-                <Button
-                  text='Continue'
-                  type={
-                    isAllFieldsSelected(
-                      developerObjects[currentDeveloperObjectIndex],
-                      currentObjectMapping.transformations
-                    )
-                      ? 'primary'
-                      : 'disabled'
-                  }
-                  onClick={() => {
-                    if (
-                      isAllFieldsSelected(
-                        developerObjects[currentDeveloperObjectIndex],
-                        currentObjectMapping.transformations
-                      )
-                    ) {
-                      setCurrentStep(currentStep + 1)
-                      if (
-                        developerObjects[currentDeveloperObjectIndex].events
-                      ) {
-                        setCurrentStage(MappingStages.Events)
-                      } else {
-                        setCurrentStage(MappingStages.RepeatDialog)
-                      }
-                    }
-                  }}
-                />
-              </div>
-              {removeBranding ? null : <XkitBranding />}
-            </div>
+        <div className='flex flex-col h-[calc(100%-40px)]'>
+          <div className='text-sm pt-2.5 pb-4 px-6'>
+            Choose fields from {userObjects[currentUserObjectIndex].label_one}{' '}
+            that correspond to the given fields for{' '}
+            {developerObjects[currentDeveloperObjectIndex].label}
           </div>
-        </>
-      ) : null
-    case MappingStages.Events:
-      return developerObjects && userObjects && currentObjectMapping ? (
-        <>
-          <StepIndicator currentStep={currentStep} maxSteps={maxSteps} />
-          <div className='flex flex-col h-[calc(100%-40px)]'>
-            <div className='text-sm pt-2.5 pb-4 px-6'>
-              Choose how you want to handle changes when{' '}
-              {developerObjects[currentDeveloperObjectIndex].label} is updated
-            </div>
-            <div className='pb-2.5 flex flex-col grow overflow-y-auto'>
-              <div className='grow'>
-                {developerObjects[currentDeveloperObjectIndex].events?.map(
-                  (event, index) => {
-                    const existingEventIndex =
-                      currentObjectMapping.event_actions.findIndex(
-                        (existingEvent) =>
-                          existingEvent.event.slug === event.slug
+          <div className='pb-2.5 px-6 grow flex flex-col overflow-y-auto'>
+            <div className='grow'>
+              {developerObjects[currentDeveloperObjectIndex].fields?.map(
+                (field) => {
+                  const existingFieldIndex = getTransformationIndex(
+                    field.slug,
+                    currentObjectMapping.transformations
+                  )
+                  const selected: {
+                    value: string | undefined
+                    static: boolean
+                  } = { value: undefined, static: false }
+                  if (existingFieldIndex > -1) {
+                    switch (
+                      currentObjectMapping.transformations[existingFieldIndex]
+                        .name
+                    ) {
+                      case 'static':
+                        selected.value =
+                          currentObjectMapping.transformations[
+                            existingFieldIndex
+                          ].static_value
+                        selected.static = true
+                        break
+                      case 'date':
+                      case 'direct':
+                      default:
+                        selected.value =
+                          currentObjectMapping.transformations[
+                            existingFieldIndex
+                          ].source_pointer
+                        break
+                    }
+                  }
+
+                  let dateTransformation = null
+                  if (selected.value && !selected.static) {
+                    const option = findSelectedOption(
+                      selectorsToOptions(
+                        userObjects[currentUserObjectIndex].selectors
+                      ),
+                      selected.value
+                    )
+                    if (option) {
+                      const selectableCriteria = getSelectableCriteria(
+                        option,
+                        field
                       )
-                    return (
-                      <MapEvent
-                        event={event}
-                        isFirstItem={index === 0}
-                        currentUserObject={userObjects[currentUserObjectIndex]}
-                        currentObjectMapping={currentObjectMapping}
-                        existingEventIndex={existingEventIndex}
-                        onEventTypeSelect={(value) => {
-                          const newEvent = {
-                            event: {
-                              slug: event.slug
-                            },
-                            action_type: value,
-                            transformations: []
-                          }
-                          const clonedObjectMapping =
-                            window.structuredClone<ObjectMapping>(
-                              currentObjectMapping
+                      if (
+                        selectableCriteria &&
+                        selectableCriteria.transformations.includes('date')
+                      ) {
+                        let disabled = false
+                        const intersectionTransformations =
+                          supportedTransformations.filter((transformation) =>
+                            selectableCriteria.transformations.includes(
+                              transformation
                             )
-                          if (existingEventIndex > -1) {
-                            clonedObjectMapping.event_actions[
-                              existingEventIndex
-                            ] = {
-                              ...newEvent,
-                              transformations:
-                                clonedObjectMapping.event_actions[
-                                  existingEventIndex
-                                ].transformations
+                          )
+                        if (
+                          intersectionTransformations.length === 1 &&
+                          intersectionTransformations[0] === 'date'
+                        ) {
+                          disabled = true
+                        }
+
+                        dateTransformation = (
+                          <CheckBox
+                            label='Convert to ISO 8601 date format'
+                            checked={
+                              currentObjectMapping.transformations[
+                                existingFieldIndex
+                              ].name === 'date'
                             }
-                          } else {
-                            clonedObjectMapping.event_actions.push(newEvent)
-                          }
-                          setCurrentObjectMapping(clonedObjectMapping)
+                            disabled={disabled}
+                            onChange={(value) => {
+                              if (existingFieldIndex > -1) {
+                                const clonedObjectMapping =
+                                  window.structuredClone<ObjectMapping>(
+                                    currentObjectMapping
+                                  )
+                                clonedObjectMapping.transformations[
+                                  existingFieldIndex
+                                ].name = value ? 'date' : 'direct'
+                                setCurrentObjectMapping(clonedObjectMapping)
+                              }
+                            }}
+                          />
+                        )
+                      }
+                    }
+                  }
+
+                  return (
+                    <div className='py-3' key={field.slug}>
+                      <div>{field.label}</div>
+                      <div className='text-xs text-neutral-500 py-2.5'>
+                        {field.description}
+                      </div>
+                      <ComboBox
+                        placeholder='Choose data'
+                        selected={selected}
+                        options={selectorsToOptions(
+                          userObjects[currentUserObjectIndex].selectors
+                        )}
+                        allowFiltering={true}
+                        allowStatic={true}
+                        criteria={(option) => {
+                          return isSelectableCriteria(option, field)
                         }}
-                        onPayloadFieldSelect={(
-                          value,
-                          type,
-                          payloadField,
-                          existingFieldIndex
-                        ) => {
+                        getSelectableCriteria={(option) => {
+                          return getSelectableCriteria(option, field)
+                        }}
+                        onSelect={(value, type) => {
                           const transformation: Transformation = {
-                            field: { slug: payloadField.slug },
+                            field: {
+                              slug: field.slug
+                            },
                             name: type
                           }
                           switch (type) {
                             case 'static':
                               transformation.static_value = value
                               break
+                            case 'date':
                             case 'direct':
                             default:
                               transformation.source_pointer = value
@@ -468,116 +585,176 @@ const MappingScreen: FC<MappingScreenProps> = ({
                               currentObjectMapping
                             )
                           if (existingFieldIndex > -1) {
-                            clonedObjectMapping.event_actions[
-                              existingEventIndex
-                            ].transformations[existingFieldIndex] =
-                              transformation
+                            clonedObjectMapping.transformations[
+                              existingFieldIndex
+                            ] = transformation
                           } else {
-                            clonedObjectMapping.event_actions[
-                              existingEventIndex
-                            ].transformations.push(transformation)
+                            clonedObjectMapping.transformations.push(
+                              transformation
+                            )
                           }
                           setCurrentObjectMapping(clonedObjectMapping)
                         }}
-                        key={event.slug}
                       />
+                      {dateTransformation}
+                    </div>
+                  )
+                }
+              )}
+            </div>
+            <div className='pt-6 pb-4'>
+              <Button
+                text='Done'
+                type={
+                  isAllFieldsSelected(
+                    developerObjects[currentDeveloperObjectIndex],
+                    currentObjectMapping.transformations
+                  )
+                    ? 'primary'
+                    : 'disabled'
+                }
+                onClick={() => {
+                  if (
+                    isAllFieldsSelected(
+                      developerObjects[currentDeveloperObjectIndex],
+                      currentObjectMapping.transformations
                     )
+                  ) {
+                    updateMapping(
+                      currentObjectMapping,
+                      objectMappings,
+                      setObjectMappings
+                    )
+                    setCurrentStage(MappingStages.Mappings)
                   }
-                )}
-              </div>
-              <div className='px-6 pt-6 pb-4'>
-                <Button
-                  text='Continue'
-                  type={
+                }}
+              />
+            </div>
+            {removeBranding ? null : <XkitBranding />}
+          </div>
+        </div>
+      ) : null
+    case MappingStages.Events:
+      return developerObjects && userObjects && currentObjectMapping ? (
+        <div className='flex flex-col h-[calc(100%-40px)]'>
+          <div className='text-sm pt-2.5 pb-4 px-6'>
+            Choose how you want to handle changes when{' '}
+            {developerObjects[currentDeveloperObjectIndex].label} is updated
+          </div>
+          <div className='pb-2.5 flex flex-col grow overflow-y-auto'>
+            <div className='grow'>
+              {developerObjects[currentDeveloperObjectIndex].events?.map(
+                (event, index) => {
+                  const existingEventIndex =
+                    currentObjectMapping.event_actions.findIndex(
+                      (existingEvent) => existingEvent.event.slug === event.slug
+                    )
+                  return (
+                    <MapEvent
+                      event={event}
+                      isFirstItem={index === 0}
+                      currentUserObject={userObjects[currentUserObjectIndex]}
+                      currentObjectMapping={currentObjectMapping}
+                      existingEventIndex={existingEventIndex}
+                      onEventTypeSelect={(value) => {
+                        const newEvent = {
+                          event: {
+                            slug: event.slug
+                          },
+                          action_type: value,
+                          transformations: []
+                        }
+                        const clonedObjectMapping =
+                          window.structuredClone<ObjectMapping>(
+                            currentObjectMapping
+                          )
+                        if (existingEventIndex > -1) {
+                          clonedObjectMapping.event_actions[
+                            existingEventIndex
+                          ] = {
+                            ...newEvent,
+                            transformations:
+                              clonedObjectMapping.event_actions[
+                                existingEventIndex
+                              ].transformations
+                          }
+                        } else {
+                          clonedObjectMapping.event_actions.push(newEvent)
+                        }
+                        setCurrentObjectMapping(clonedObjectMapping)
+                      }}
+                      onPayloadFieldSelect={(
+                        value,
+                        type,
+                        payloadField,
+                        existingFieldIndex
+                      ) => {
+                        const transformation: Transformation = {
+                          field: { slug: payloadField.slug },
+                          name: type
+                        }
+                        switch (type) {
+                          case 'static':
+                            transformation.static_value = value
+                            break
+                          case 'direct':
+                          default:
+                            transformation.source_pointer = value
+                            break
+                        }
+
+                        const clonedObjectMapping =
+                          window.structuredClone<ObjectMapping>(
+                            currentObjectMapping
+                          )
+                        if (existingFieldIndex > -1) {
+                          clonedObjectMapping.event_actions[
+                            existingEventIndex
+                          ].transformations[existingFieldIndex] = transformation
+                        } else {
+                          clonedObjectMapping.event_actions[
+                            existingEventIndex
+                          ].transformations.push(transformation)
+                        }
+                        setCurrentObjectMapping(clonedObjectMapping)
+                      }}
+                      key={event.slug}
+                    />
+                  )
+                }
+              )}
+            </div>
+            <div className='px-6 pt-6 pb-4'>
+              <Button
+                text='Done'
+                type={
+                  isAllEventsSelected(
+                    developerObjects[currentDeveloperObjectIndex],
+                    currentObjectMapping.event_actions
+                  )
+                    ? 'primary'
+                    : 'disabled'
+                }
+                onClick={() => {
+                  if (
                     isAllEventsSelected(
                       developerObjects[currentDeveloperObjectIndex],
                       currentObjectMapping.event_actions
                     )
-                      ? 'primary'
-                      : 'disabled'
+                  ) {
+                    updateMapping(
+                      currentObjectMapping,
+                      objectMappings,
+                      setObjectMappings
+                    )
+                    setCurrentStage(MappingStages.Mappings)
                   }
-                  onClick={() => {
-                    if (
-                      isAllEventsSelected(
-                        developerObjects[currentDeveloperObjectIndex],
-                        currentObjectMapping.event_actions
-                      )
-                    ) {
-                      setCurrentStep(currentStep + 1)
-                      setCurrentStage(MappingStages.RepeatDialog)
-                    }
-                  }}
-                />
-              </div>
-              {removeBranding ? null : <XkitBranding />}
+                }}
+              />
             </div>
+            {removeBranding ? null : <XkitBranding />}
           </div>
-        </>
-      ) : null
-    case MappingStages.RepeatDialog:
-      return developerObjects && userObjects && currentObjectMapping ? (
-        <>
-          <StepIndicator currentStep={currentStep} maxSteps={maxSteps} />
-          <div className='flex flex-col h-[calc(100%-40px)]'>
-            <div className='text-sm pt-2.5 pb-4 px-6'>
-              Would you like to map another object from your CRM to{' '}
-              {developerObjects[currentDeveloperObjectIndex].label}?
-            </div>
-            <div className='pb-2.5 flex flex-col grow overflow-y-auto'>
-              <div className='grow'>
-                <div className='py-4 px-6'>
-                  <Button
-                    text='Map another object'
-                    type='primary'
-                    onClick={() => {
-                      let extraSteps = 2
-                      if (
-                        developerObjects[currentDeveloperObjectIndex].fields
-                      ) {
-                        extraSteps = extraSteps + 1
-                      }
-                      if (
-                        developerObjects[currentDeveloperObjectIndex].events
-                      ) {
-                        extraSteps = extraSteps + 1
-                      }
-                      setMaxSteps(maxSteps + extraSteps)
-                      setCurrentStep(currentStep + 1)
-                      updateMapping(currentObjectMapping, objectMappings)
-                      setCurrentStage(MappingStages.Objects)
-                    }}
-                  />
-                </div>
-              </div>
-              <div className='px-6 pt-6 pb-4'>
-                {currentDeveloperObjectIndex === developerObjects.length - 1 ? (
-                  <Button
-                    text='Finish setup'
-                    type='success'
-                    onClick={() => {
-                      updateMapping(currentObjectMapping, objectMappings)
-                      resolve(connection)
-                    }}
-                  />
-                ) : (
-                  <Button
-                    text='Continue setup'
-                    type='success'
-                    onClick={() => {
-                      setCurrentStep(currentStep + 1)
-                      updateMapping(currentObjectMapping, objectMappings)
-                      setCurrentDeveloperObjectIndex(
-                        currentDeveloperObjectIndex + 1
-                      )
-                      setCurrentStage(MappingStages.Objects)
-                    }}
-                  />
-                )}
-              </div>
-              {removeBranding ? null : <XkitBranding />}
-            </div>
-          </div>
-        </>
+        </div>
       ) : null
     default:
       return null

@@ -12,6 +12,8 @@ interface ModalScreensProps {
   connectors: Connector[]
   currentConnector: Connector | undefined
   connect: (connector: Connector) => Promise<void>
+  reconnect: (connection: Connection) => Promise<void>
+  disconnect: (connection: Connection) => Promise<void>
   mapping: unknown | undefined
   currentConnection: Connection | undefined
   resolve: (connection: Connection) => void
@@ -23,6 +25,8 @@ const ModalScreens: FC<ModalScreensProps> = ({
   connectors,
   currentConnector,
   connect,
+  reconnect,
+  disconnect,
   mapping,
   currentConnection,
   resolve,
@@ -101,6 +105,8 @@ const ModalScreens: FC<ModalScreensProps> = ({
           mapping={mapping}
           connection={currentConnection}
           resolve={resolve}
+          reconnect={reconnect}
+          disconnect={disconnect}
           removeBranding={removeBranding}
         />
       ) : null

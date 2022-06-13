@@ -1,6 +1,6 @@
 import { Connection, Connector, Platform, XkitJs } from '@xkit-co/xkit.js'
 import React, { FC, useCallback, useEffect, useState } from 'react'
-import { friendlyMessage } from '../errors'
+import { friendlyMessage } from '../functions/errors'
 import { Screen } from '../interfaces/screen.interface'
 import Cross from './icons/Cross'
 import ModalScreens from './ModalScreens'
@@ -42,6 +42,34 @@ const App: FC<AppProps> = ({
         const connection = await xkit.addConnection(connector.slug)
         setCurrentConnection(connection)
         setScreen(Screen.Mapping)
+      } catch (error) {
+        return reject(friendlyMessage(error.message))
+      }
+    } else {
+      return reject('Could not identify session.')
+    }
+  }
+
+  const disconnect = async (connection: Connection) => {
+    if (xkit && xkit.domain) {
+      try {
+        await xkit.removeConnection({
+          id: connection.id
+        })
+        return reject('User disconnected their CRM')
+      } catch (error) {
+        return reject(friendlyMessage(error.message))
+      }
+    } else {
+      return reject('Could not identify session.')
+    }
+  }
+
+  const reconnect = async (connection: Connection) => {
+    if (xkit && xkit.domain) {
+      try {
+        const newConnection = await xkit.reconnect(connection)
+        setCurrentConnection(newConnection)
       } catch (error) {
         return reject(friendlyMessage(error.message))
       }
@@ -147,6 +175,8 @@ const App: FC<AppProps> = ({
             connectors={connectors}
             currentConnector={currentConnector}
             connect={connect}
+            reconnect={reconnect}
+            disconnect={disconnect}
             mapping={mapping}
             currentConnection={currentConnection}
             resolve={resolve}

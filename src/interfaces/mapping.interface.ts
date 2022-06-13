@@ -1,9 +1,11 @@
 export enum MappingStages {
   Loading,
+  Configuration,
+  Connection,
+  Mappings,
   Objects,
   Fields,
-  Events,
-  RepeatDialog // Choice for the user to map another object from the CRM or finish setup
+  Events
 }
 
 export interface Field {

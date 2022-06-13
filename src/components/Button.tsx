@@ -9,13 +9,6 @@ interface ButtonProps {
 const Button: FC<ButtonProps> = ({ text, type, onClick }) => {
   let colors: string[] = []
   switch (type) {
-    case 'success':
-      colors = [
-        'bg-emerald-500',
-        'hover:bg-emerald-600',
-        'active:bg-emerald-700'
-      ]
-      break
     case 'disabled':
       colors = ['bg-neutral-400']
       break

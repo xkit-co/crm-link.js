@@ -1,3 +1,4 @@
+import React from 'react'
 import { Option } from '../components/ComboBox'
 import {
   Criteria,
@@ -10,7 +11,8 @@ import {
 
 export const updateMapping = (
   currentObjectMapping: ObjectMapping,
-  objectMappings: ObjectMapping[]
+  objectMappings: ObjectMapping[],
+  setObjectMappings: React.Dispatch<React.SetStateAction<ObjectMapping[]>>
 ) => {
   const existingMappingIndex = objectMappings.findIndex(
     (objectMapping) =>
@@ -18,9 +20,28 @@ export const updateMapping = (
       objectMapping.api_object_id === currentObjectMapping.api_object_id
   )
   if (existingMappingIndex > -1) {
-    objectMappings[existingMappingIndex] = currentObjectMapping
+    const clonedObjectMappings = [...objectMappings]
+    clonedObjectMappings[existingMappingIndex] = currentObjectMapping
+    setObjectMappings(clonedObjectMappings)
   } else {
-    objectMappings.push(currentObjectMapping)
+    setObjectMappings([...objectMappings, currentObjectMapping])
+  }
+}
+
+export const removeMapping = (
+  currentObjectMapping: ObjectMapping,
+  objectMappings: ObjectMapping[],
+  setObjectMappings: React.Dispatch<React.SetStateAction<ObjectMapping[]>>
+) => {
+  const existingMappingIndex = objectMappings.findIndex(
+    (objectMapping) =>
+      objectMapping.crm_object_id === currentObjectMapping.crm_object_id &&
+      objectMapping.api_object_id === currentObjectMapping.api_object_id
+  )
+  if (existingMappingIndex > -1) {
+    const clonedObjectMappings = [...objectMappings]
+    clonedObjectMappings.splice(existingMappingIndex, 1)
+    setObjectMappings(clonedObjectMappings)
   }
 }
 
@@ -75,6 +96,42 @@ export const isAllEventsSelected = (
           return false
         }
       }
+    }
+  }
+  return true
+}
+
+export const isObjectSelected = (
+  developerObject: DeveloperObject,
+  objectMappings: ObjectMapping[]
+) => {
+  let mappingExistsForDeveloperObject = false
+  for (const objectMapping of objectMappings) {
+    if (objectMapping.crm_object_id === developerObject.id) {
+      mappingExistsForDeveloperObject = true
+      if (
+        !(
+          isAllFieldsSelected(developerObject, objectMapping.transformations) &&
+          isAllEventsSelected(developerObject, objectMapping.event_actions)
+        )
+      ) {
+        return false
+      }
+    }
+  }
+  if (!mappingExistsForDeveloperObject) {
+    return false
+  }
+  return true
+}
+
+export const isAllObjectsSelected = (
+  developerObjects: DeveloperObject[],
+  objectMappings: ObjectMapping[]
+) => {
+  for (const developerObject of developerObjects) {
+    if (!isObjectSelected(developerObject, objectMappings)) {
+      return false
     }
   }
   return true
