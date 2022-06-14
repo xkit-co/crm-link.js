@@ -1,7 +1,7 @@
 import React, { FC } from 'react'
 
 interface ButtonProps {
-  text: string
+  text: string | React.ReactNode
   type: string
   onClick: () => void
 }

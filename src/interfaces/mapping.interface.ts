@@ -1,14 +1,4 @@
-export enum MappingStages {
-  Loading,
-  Configuration,
-  Connection,
-  Mappings,
-  Objects,
-  Fields,
-  Events
-}
-
-export interface Field {
+export interface CRMObjectField {
   slug: string
   label: string
   description: string
@@ -18,24 +8,24 @@ export interface Field {
   }
 }
 
-export interface Event {
+export interface CRMObjectEvent {
   slug: string
   type: string
   label: string
   description: string
-  fields: Field[]
+  fields: CRMObjectField[]
 }
 
-export interface DeveloperObject {
+export interface CRMObject {
   id: number
   slug: string
   label: string
   description: string
-  fields?: Field[]
-  events?: Event[]
+  fields?: CRMObjectField[]
+  events?: CRMObjectEvent[]
 }
 
-export interface Criteria {
+export interface InputType {
   input_type: {
     type: string
     format: string | null
@@ -47,16 +37,16 @@ export interface Selector {
   label: string
   pointer: string
   type_label: string
-  input_types: Criteria[]
+  input_types: InputType[]
   children?: Selector[]
 }
 
-export interface UserObject {
+export interface APIObject {
   id: number
   slug: string
   label_one: string
   label_many: string
-  selectors: Selector[]
+  selector: Selector
 }
 
 export interface Transformation {
@@ -72,11 +62,11 @@ export interface ObjectMapping {
   crm_object_id: number
   api_object_id: number
   transformations: Transformation[]
-  event_actions: {
+  event_actions: Array<{
     event: {
       slug: string
     }
     action_type: string
     transformations: Transformation[]
-  }[]
+  }>
 }

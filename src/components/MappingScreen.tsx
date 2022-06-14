@@ -1,6 +1,11 @@
 import { Connection } from '@xkit-co/xkit.js'
+import {
+  APIObject,
+  CRMObject,
+  ObjectMapping,
+  Transformation
+} from '../interfaces/mapping.interface'
 import React, { FC, useEffect, useState } from 'react'
-import { dummyDeveloperObjects, dummyUserObjects } from '../dummyData'
 import {
   findSelectedOption,
   getSelectableCriteria,
@@ -15,19 +20,13 @@ import {
   supportedTransformations,
   updateMapping
 } from '../functions/mapping'
-import {
-  DeveloperObject,
-  MappingStages,
-  ObjectMapping,
-  Transformation,
-  UserObject
-} from '../interfaces/mapping.interface'
 import { xkitBrowserWindow } from '../interfaces/window.interface'
 import Button from './Button'
 import CheckBox from './CheckBox'
 import ComboBox from './ComboBox'
 import ConnectionStage from './ConnectionStage'
 import Search from './icons/Search'
+import Spinner from './icons/Spinner'
 import Tick from './icons/Tick'
 import Trash from './icons/Trash'
 import Warn from './icons/Warn'
@@ -36,8 +35,25 @@ import XkitBranding from './XkitBranding'
 
 declare const window: xkitBrowserWindow
 
+enum MappingStages {
+  Loading,
+  Configuration,
+  Connection,
+  Mappings,
+  Objects,
+  Fields,
+  Events
+}
+
 interface MappingScreenProps {
-  mapping: unknown | undefined
+  listCRMObjects: () => Promise<void | CRMObject[]>
+  listAPIObjects: (connection: Connection) => Promise<void | APIObject[]>
+  getMapping: (connection: Connection) => Promise<void | ObjectMapping[]>
+  saveMapping: (
+    connection: Connection,
+    CRMObjects: CRMObject[],
+    objectMappings: ObjectMapping[]
+  ) => Promise<void>
   connection: Connection
   resolve: (connection: Connection) => void
   reconnect: (connection: Connection) => Promise<void>
@@ -46,7 +62,10 @@ interface MappingScreenProps {
 }
 
 const MappingScreen: FC<MappingScreenProps> = ({
-  mapping,
+  listCRMObjects,
+  listAPIObjects,
+  getMapping,
+  saveMapping,
   connection,
   resolve,
   reconnect,
@@ -58,12 +77,12 @@ const MappingScreen: FC<MappingScreenProps> = ({
     ObjectMapping | undefined
   >(undefined)
   const [developerObjects, setDeveloperObjects] = useState<
-    DeveloperObject[] | undefined
+    CRMObject[] | undefined
   >(undefined)
-  const [userObjects, setUserObjects] = useState<UserObject[] | undefined>(
+  const [userObjects, setUserObjects] = useState<APIObject[] | undefined>(
     undefined
   )
-  const [filteredUserObjects, setFilteredUserObjects] = useState<UserObject[]>(
+  const [filteredUserObjects, setFilteredUserObjects] = useState<APIObject[]>(
     []
   )
   const [currentDeveloperObjectIndex, setCurrentDeveloperObjectIndex] =
@@ -73,17 +92,56 @@ const MappingScreen: FC<MappingScreenProps> = ({
   )
   const [currentUserObjectIndex, setCurrentUserObjectIndex] =
     useState<number>(0)
+  const [submitting, setSubmitting] = useState<boolean>(false)
 
   useEffect(() => {
-    setDeveloperObjects(dummyDeveloperObjects)
-    setUserObjects(dummyUserObjects)
-    setFilteredUserObjects(dummyUserObjects)
-    setCurrentDeveloperObjectIndex(0)
-    setCurrentUserObjectIndex(0)
-    setCurrentStage(MappingStages.Configuration)
-  }, [mapping, connection])
+    const loadObjects = async () => {
+      const CRMObjects = await listCRMObjects()
+      if (CRMObjects) {
+        const APIObjects = await listAPIObjects(connection)
+        if (APIObjects) {
+          const mappings = await getMapping(connection)
+          if (mappings) {
+            setDeveloperObjects(CRMObjects)
+            setUserObjects(APIObjects)
+            setFilteredUserObjects(APIObjects)
+            setCurrentDeveloperObjectIndex(0)
+            setCurrentUserObjectIndex(0)
+            setObjectMappings(mappings)
+            setCurrentStage(MappingStages.Configuration)
+          }
+        }
+      }
+    }
+    setCurrentStage(MappingStages.Loading)
+    loadObjects()
+  }, [listCRMObjects, connection])
 
   switch (currentStage) {
+    case MappingStages.Loading:
+      return connection ? (
+        <>
+          <div className='flex flex-col justify-center items-center w-full h-[calc(100%-80px)]'>
+            <div className='w-24 h-24'>
+              <img
+                className='block w-full'
+                src={connection.connector.mark_url}
+                alt={connection.connector.name}
+              />
+            </div>
+            <div className='pt-2 flex items-center gap-2'>
+              <Spinner className='w-6 h-6' />
+              Fetching data
+            </div>
+            <div className='pt-4 text-sm'>This could take a few seconds</div>
+          </div>
+          {removeBranding ? null : (
+            <div className='w-full absolute bottom-0 left-0 py-2.5'>
+              <XkitBranding />
+            </div>
+          )}
+        </>
+      ) : null
     case MappingStages.Configuration:
       return developerObjects && connection ? (
         <div className='flex flex-col h-[calc(100%-40px)]'>
@@ -152,8 +210,15 @@ const MappingScreen: FC<MappingScreenProps> = ({
             </div>
             <div className='px-6 pt-6 pb-4'>
               <Button
-                text='Finish'
+                text={
+                  submitting ? (
+                    <Spinner className='h-4 w-4 shrink-0' />
+                  ) : (
+                    'Finish'
+                  )
+                }
                 type={
+                  !submitting &&
                   connection.enabled &&
                   connection.authorization &&
                   connection.authorization.status !== 'error' &&
@@ -161,9 +226,18 @@ const MappingScreen: FC<MappingScreenProps> = ({
                     ? 'primary'
                     : 'disabled'
                 }
-                onClick={() => {
-                  if (isAllObjectsSelected(developerObjects, objectMappings)) {
-                    setCurrentStage(MappingStages.Configuration)
+                onClick={async () => {
+                  if (
+                    !submitting &&
+                    isAllObjectsSelected(developerObjects, objectMappings)
+                  ) {
+                    setSubmitting(true)
+                    await saveMapping(
+                      connection,
+                      developerObjects,
+                      objectMappings
+                    )
+                    setSubmitting(false)
                     resolve(connection)
                   }
                 }}
@@ -487,9 +561,9 @@ const MappingScreen: FC<MappingScreenProps> = ({
                   let dateTransformation = null
                   if (selected.value && !selected.static) {
                     const option = findSelectedOption(
-                      selectorsToOptions(
-                        userObjects[currentUserObjectIndex].selectors
-                      ),
+                      selectorsToOptions([
+                        userObjects[currentUserObjectIndex].selector
+                      ]),
                       selected.value
                     )
                     if (option) {
@@ -551,9 +625,9 @@ const MappingScreen: FC<MappingScreenProps> = ({
                       <ComboBox
                         placeholder='Choose data'
                         selected={selected}
-                        options={selectorsToOptions(
-                          userObjects[currentUserObjectIndex].selectors
-                        )}
+                        options={selectorsToOptions([
+                          userObjects[currentUserObjectIndex].selector
+                        ])}
                         allowFiltering={true}
                         allowStatic={true}
                         criteria={(option) => {

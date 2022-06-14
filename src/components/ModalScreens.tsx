@@ -1,5 +1,10 @@
 import { Connection, Connector } from '@xkit-co/xkit.js'
 import React, { FC } from 'react'
+import {
+  APIObject,
+  CRMObject,
+  ObjectMapping
+} from '../interfaces/mapping.interface'
 import { Screen } from '../interfaces/screen.interface'
 import CRMConnector from './CRMConnector'
 import Spinner from './icons/Spinner'
@@ -14,7 +19,14 @@ interface ModalScreensProps {
   connect: (connector: Connector) => Promise<void>
   reconnect: (connection: Connection) => Promise<void>
   disconnect: (connection: Connection) => Promise<void>
-  mapping: unknown | undefined
+  listCRMObjects: () => Promise<void | CRMObject[]>
+  listAPIObjects: (connection: Connection) => Promise<void | APIObject[]>
+  getMapping: (connection: Connection) => Promise<void | ObjectMapping[]>
+  saveMapping: (
+    connection: Connection,
+    CRMObjects: CRMObject[],
+    objectMappings: ObjectMapping[]
+  ) => Promise<void>
   currentConnection: Connection | undefined
   resolve: (connection: Connection) => void
   removeBranding: boolean
@@ -27,7 +39,10 @@ const ModalScreens: FC<ModalScreensProps> = ({
   connect,
   reconnect,
   disconnect,
-  mapping,
+  listCRMObjects,
+  listAPIObjects,
+  getMapping,
+  saveMapping,
   currentConnection,
   resolve,
   removeBranding
@@ -102,7 +117,10 @@ const ModalScreens: FC<ModalScreensProps> = ({
     case Screen.Mapping:
       return currentConnection ? (
         <MappingScreen
-          mapping={mapping}
+          listCRMObjects={listCRMObjects}
+          listAPIObjects={listAPIObjects}
+          getMapping={getMapping}
+          saveMapping={saveMapping}
           connection={currentConnection}
           resolve={resolve}
           reconnect={reconnect}

@@ -1,4 +1,10 @@
 import { Connection, Connector, Platform, XkitJs } from '@xkit-co/xkit.js'
+import {
+  APIObject,
+  CRMObject,
+  ObjectMapping
+} from '../interfaces/mapping.interface'
+import { IKitAPIError } from '@xkit-co/xkit.js/lib/api/request'
 import React, { FC, useCallback, useEffect, useState } from 'react'
 import { friendlyMessage } from '../functions/errors'
 import { Screen } from '../interfaces/screen.interface'
@@ -13,8 +19,6 @@ interface AppProps {
   resolve: (connection: Connection) => void
   reject: (message: string) => void
 }
-
-const CRMList = ['salesforce']
 
 const App: FC<AppProps> = ({
   visible,
@@ -78,6 +82,77 @@ const App: FC<AppProps> = ({
     }
   }
 
+  const listCRMObjects = async () => {
+    if (xkit && xkit.domain) {
+      try {
+        const response = (await xkit.listCRMObjects(mapping)) as {
+          errors?: { error: string; path: string }[]
+          objects: CRMObject[]
+        }
+        if (response.errors && response.errors.length) {
+          return reject(
+            `Error in mapping argument: ${response.errors[0].path} ${response.errors[0].error}`
+          )
+        }
+        return response.objects
+      } catch (error) {
+        return reject(friendlyMessage(error.message))
+      }
+    } else {
+      return reject('Could not identify session.')
+    }
+  }
+
+  const listAPIObjects = async (
+    connection: Connection
+  ): Promise<void | APIObject[]> => {
+    if (xkit && xkit.domain) {
+      try {
+        const objects = await xkit.listAPIObjects(connection)
+        return objects as APIObject[]
+      } catch (error) {
+        if (error instanceof IKitAPIError && error.statusCode === 424) {
+          // API objects are not ready yet. Keep polling and resolve only when we get the API objects
+          await new Promise((resolve) => setTimeout(resolve, 1000))
+          return await listAPIObjects(connection)
+        } else {
+          return reject(friendlyMessage(error.message))
+        }
+      }
+    } else {
+      return reject('Could not identify session.')
+    }
+  }
+
+  const getMapping = async (connection: Connection) => {
+    if (xkit && xkit.domain) {
+      try {
+        const objectMappings = await xkit.getMapping(connection)
+        return objectMappings as ObjectMapping[]
+      } catch (error) {
+        return []
+      }
+    } else {
+      return reject('Could not identify session.')
+    }
+  }
+
+  const saveMapping = async (
+    connection: Connection,
+    CRMObjects: CRMObject[],
+    objectMappings: ObjectMapping[]
+  ) => {
+    if (xkit && xkit.domain) {
+      try {
+        return await xkit.saveMapping(connection, CRMObjects, objectMappings)
+      } catch (error) {
+        return reject(friendlyMessage(error.message))
+      }
+    } else {
+      return reject('Could not identify session.')
+    }
+  }
+
   const fetchCRMs = useCallback(
     async (token: string, xkit: XkitJs) => {
       try {
@@ -93,6 +168,20 @@ const App: FC<AppProps> = ({
         return reject('Could not get the current platform.')
       }
 
+      try {
+        const connections = await xkit.listConnections()
+        for (const connection of connections) {
+          if (connection.connector.crm) {
+            setCurrentConnector(connection.connector)
+            setCurrentConnection(connection)
+            setScreen(Screen.Mapping)
+            return
+          }
+        }
+      } catch (error) {
+        return reject('Error while fetching existing CRM connections')
+      }
+
       let connectors: Connector[] = []
       try {
         connectors = await xkit.listConnectors()
@@ -100,9 +189,7 @@ const App: FC<AppProps> = ({
         return reject('Could not load available CRMs.')
       }
 
-      const CRMs = connectors.filter((connector) =>
-        CRMList.includes(connector.slug)
-      )
+      const CRMs = connectors.filter((connector) => connector.crm)
       if (CRMs.length) {
         setConnectors(CRMs)
         setScreen(Screen.Select)
@@ -177,7 +264,10 @@ const App: FC<AppProps> = ({
             connect={connect}
             reconnect={reconnect}
             disconnect={disconnect}
-            mapping={mapping}
+            listCRMObjects={listCRMObjects}
+            listAPIObjects={listAPIObjects}
+            getMapping={getMapping}
+            saveMapping={saveMapping}
             currentConnection={currentConnection}
             resolve={resolve}
             removeBranding={platform ? platform.remove_branding : false}

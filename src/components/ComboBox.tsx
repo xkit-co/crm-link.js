@@ -1,9 +1,9 @@
+import { InputType, Selector } from '../interfaces/mapping.interface'
 import React, { FC, useEffect, useRef, useState } from 'react'
 import {
   findSelectedOption,
   supportedTransformations
 } from '../functions/mapping'
-import { Criteria, Selector } from '../interfaces/mapping.interface'
 import Caret from './icons/Caret'
 import Minus from './icons/Minus'
 import Plus from './icons/Plus'
@@ -26,7 +26,7 @@ interface ComboBoxProps {
     static: boolean
   }
   criteria?: (option: Option) => boolean
-  getSelectableCriteria?: (option: Option) => Criteria | undefined
+  getSelectableCriteria?: (option: Option) => InputType | undefined
   onSelect: (value: string, type: string) => void
 }
 
@@ -218,7 +218,7 @@ interface OptionItemProps {
   searchFieldText: string
   disabled?: boolean
   criteria?: (option: Option) => boolean
-  getSelectableCriteria?: (option: Option) => Criteria | undefined
+  getSelectableCriteria?: (option: Option) => InputType | undefined
 }
 
 const OptionItem: FC<OptionItemProps> = ({

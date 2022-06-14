@@ -1,13 +1,13 @@
-import React from 'react'
-import { Option } from '../components/ComboBox'
 import {
-  Criteria,
-  DeveloperObject,
-  Field,
+  CRMObject,
+  CRMObjectField,
+  InputType,
   ObjectMapping,
   Selector,
   Transformation
 } from '../interfaces/mapping.interface'
+import React from 'react'
+import { Option } from '../components/ComboBox'
 
 export const updateMapping = (
   currentObjectMapping: ObjectMapping,
@@ -55,7 +55,7 @@ export const getTransformationIndex = (
 }
 
 export const isAllFieldsSelected = (
-  developerObject: DeveloperObject,
+  developerObject: CRMObject,
   transformations: Transformation[]
 ) => {
   if (!developerObject.fields) {
@@ -70,7 +70,7 @@ export const isAllFieldsSelected = (
 }
 
 export const isAllEventsSelected = (
-  developerObject: DeveloperObject,
+  developerObject: CRMObject,
   objectMappingEvents: ObjectMapping['event_actions']
 ) => {
   if (!developerObject.events) {
@@ -80,10 +80,10 @@ export const isAllEventsSelected = (
     const existingEventIndex = objectMappingEvents.findIndex(
       (objectMappingEvent) => objectMappingEvent.event.slug === event.slug
     )
-    if (!(existingEventIndex > -1)) {
-      return false
-    }
-    if (objectMappingEvents[existingEventIndex].action_type === 'update') {
+    if (
+      existingEventIndex > -1 &&
+      objectMappingEvents[existingEventIndex].action_type === 'update'
+    ) {
       for (const field of event.fields) {
         if (
           !(
@@ -102,7 +102,7 @@ export const isAllEventsSelected = (
 }
 
 export const isObjectSelected = (
-  developerObject: DeveloperObject,
+  developerObject: CRMObject,
   objectMappings: ObjectMapping[]
 ) => {
   let mappingExistsForDeveloperObject = false
@@ -126,7 +126,7 @@ export const isObjectSelected = (
 }
 
 export const isAllObjectsSelected = (
-  developerObjects: DeveloperObject[],
+  developerObjects: CRMObject[],
   objectMappings: ObjectMapping[]
 ) => {
   for (const developerObject of developerObjects) {
@@ -156,8 +156,8 @@ export const supportedTransformations = ['direct', 'date']
 
 export const getSelectableCriteria = (
   option: Option,
-  field: Field
-): Criteria | undefined => {
+  field: CRMObjectField
+): InputType | undefined => {
   if (!option.selector) {
     return undefined
   }
@@ -176,7 +176,10 @@ export const getSelectableCriteria = (
   return undefined
 }
 
-export const isSelectableCriteria = (option: Option, field: Field): boolean => {
+export const isSelectableCriteria = (
+  option: Option,
+  field: CRMObjectField
+): boolean => {
   if (getSelectableCriteria(option, field)) {
     return true
   }
