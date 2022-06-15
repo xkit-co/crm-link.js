@@ -50,7 +50,8 @@ export const getTransformationIndex = (
   transformations: Transformation[]
 ) => {
   return transformations.findIndex(
-    (transformation) => transformation.field.slug === fieldSlug
+    (transformation) =>
+      transformation.field && transformation.field.slug === fieldSlug
   )
 }
 
@@ -84,13 +85,27 @@ export const isAllEventsSelected = (
       existingEventIndex > -1 &&
       objectMappingEvents[existingEventIndex].action_type === 'update'
     ) {
-      for (const field of event.fields) {
+      for (const transformation of objectMappingEvents[existingEventIndex]
+        .transformations) {
         if (
+          !transformation.field &&
+          (!transformation.source_pointer || !transformation.static_value)
+        ) {
+          return false
+        }
+      }
+    } else if (
+      existingEventIndex > -1 &&
+      objectMappingEvents[existingEventIndex].action_type === 'search'
+    ) {
+      for (const transformation of objectMappingEvents[existingEventIndex]
+        .transformations) {
+        if (
+          !transformation.source_pointer ||
+          !transformation.criteria_operator ||
           !(
-            getTransformationIndex(
-              field.slug,
-              objectMappingEvents[existingEventIndex].transformations
-            ) > -1
+            (transformation.field && transformation.field.slug) ||
+            transformation.static_value
           )
         ) {
           return false

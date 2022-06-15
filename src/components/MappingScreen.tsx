@@ -1,29 +1,22 @@
 import { Connection } from '@xkit-co/xkit.js'
+import React, { FC, useEffect, useState } from 'react'
+import {
+  getTransformationIndex,
+  isAllEventsSelected,
+  isAllFieldsSelected,
+  isAllObjectsSelected,
+  isObjectSelected,
+  removeMapping,
+  updateMapping
+} from '../functions/mapping'
 import {
   APIObject,
   CRMObject,
   ObjectMapping,
   Transformation
 } from '../interfaces/mapping.interface'
-import React, { FC, useEffect, useState } from 'react'
-import {
-  findSelectedOption,
-  getSelectableCriteria,
-  getTransformationIndex,
-  isAllEventsSelected,
-  isAllFieldsSelected,
-  isAllObjectsSelected,
-  isObjectSelected,
-  isSelectableCriteria,
-  removeMapping,
-  selectorsToOptions,
-  supportedTransformations,
-  updateMapping
-} from '../functions/mapping'
 import { xkitBrowserWindow } from '../interfaces/window.interface'
 import Button from './Button'
-import CheckBox from './CheckBox'
-import ComboBox from './ComboBox'
 import ConnectionStage from './ConnectionStage'
 import Search from './icons/Search'
 import Spinner from './icons/Spinner'
@@ -31,6 +24,7 @@ import Tick from './icons/Tick'
 import Trash from './icons/Trash'
 import Warn from './icons/Warn'
 import MapEvent from './MapEvent'
+import MapField from './MapField'
 import XkitBranding from './XkitBranding'
 
 declare const window: xkitBrowserWindow
@@ -115,7 +109,7 @@ const MappingScreen: FC<MappingScreenProps> = ({
     }
     setCurrentStage(MappingStages.Loading)
     loadObjects()
-  }, [listCRMObjects, connection])
+  }, [listCRMObjects, listAPIObjects, getMapping, connection])
 
   switch (currentStage) {
     case MappingStages.Loading:
@@ -531,147 +525,59 @@ const MappingScreen: FC<MappingScreenProps> = ({
                     field.slug,
                     currentObjectMapping.transformations
                   )
-                  const selected: {
-                    value: string | undefined
-                    static: boolean
-                  } = { value: undefined, static: false }
-                  if (existingFieldIndex > -1) {
-                    switch (
-                      currentObjectMapping.transformations[existingFieldIndex]
-                        .name
-                    ) {
-                      case 'static':
-                        selected.value =
-                          currentObjectMapping.transformations[
-                            existingFieldIndex
-                          ].static_value
-                        selected.static = true
-                        break
-                      case 'date':
-                      case 'direct':
-                      default:
-                        selected.value =
-                          currentObjectMapping.transformations[
-                            existingFieldIndex
-                          ].source_pointer
-                        break
-                    }
-                  }
-
-                  let dateTransformation = null
-                  if (selected.value && !selected.static) {
-                    const option = findSelectedOption(
-                      selectorsToOptions([
-                        userObjects[currentUserObjectIndex].selector
-                      ]),
-                      selected.value
-                    )
-                    if (option) {
-                      const selectableCriteria = getSelectableCriteria(
-                        option,
-                        field
-                      )
-                      if (
-                        selectableCriteria &&
-                        selectableCriteria.transformations.includes('date')
-                      ) {
-                        let disabled = false
-                        const intersectionTransformations =
-                          supportedTransformations.filter((transformation) =>
-                            selectableCriteria.transformations.includes(
-                              transformation
-                            )
-                          )
-                        if (
-                          intersectionTransformations.length === 1 &&
-                          intersectionTransformations[0] === 'date'
-                        ) {
-                          disabled = true
-                        }
-
-                        dateTransformation = (
-                          <CheckBox
-                            label='Convert to ISO 8601 date format'
-                            checked={
-                              currentObjectMapping.transformations[
-                                existingFieldIndex
-                              ].name === 'date'
-                            }
-                            disabled={disabled}
-                            onChange={(value) => {
-                              if (existingFieldIndex > -1) {
-                                const clonedObjectMapping =
-                                  window.structuredClone<ObjectMapping>(
-                                    currentObjectMapping
-                                  )
-                                clonedObjectMapping.transformations[
-                                  existingFieldIndex
-                                ].name = value ? 'date' : 'direct'
-                                setCurrentObjectMapping(clonedObjectMapping)
-                              }
-                            }}
-                          />
-                        )
-                      }
-                    }
-                  }
-
                   return (
-                    <div className='py-3' key={field.slug}>
-                      <div>{field.label}</div>
-                      <div className='text-xs text-neutral-500 py-2.5'>
-                        {field.description}
-                      </div>
-                      <ComboBox
-                        placeholder='Choose data'
-                        selected={selected}
-                        options={selectorsToOptions([
-                          userObjects[currentUserObjectIndex].selector
-                        ])}
-                        allowFiltering={true}
-                        allowStatic={true}
-                        criteria={(option) => {
-                          return isSelectableCriteria(option, field)
-                        }}
-                        getSelectableCriteria={(option) => {
-                          return getSelectableCriteria(option, field)
-                        }}
-                        onSelect={(value, type) => {
-                          const transformation: Transformation = {
-                            field: {
-                              slug: field.slug
-                            },
-                            name: type
-                          }
-                          switch (type) {
-                            case 'static':
-                              transformation.static_value = value
-                              break
-                            case 'date':
-                            case 'direct':
-                            default:
-                              transformation.source_pointer = value
-                              break
-                          }
-
+                    <MapField
+                      field={field}
+                      existingFieldIndex={existingFieldIndex}
+                      currentUserObject={userObjects[currentUserObjectIndex]}
+                      currentObjectMapping={currentObjectMapping}
+                      onDateTransformationChange={(value) => {
+                        if (existingFieldIndex > -1) {
                           const clonedObjectMapping =
                             window.structuredClone<ObjectMapping>(
                               currentObjectMapping
                             )
-                          if (existingFieldIndex > -1) {
-                            clonedObjectMapping.transformations[
-                              existingFieldIndex
-                            ] = transformation
-                          } else {
-                            clonedObjectMapping.transformations.push(
-                              transformation
-                            )
-                          }
+                          clonedObjectMapping.transformations[
+                            existingFieldIndex
+                          ].name = value ? 'date' : 'direct'
                           setCurrentObjectMapping(clonedObjectMapping)
-                        }}
-                      />
-                      {dateTransformation}
-                    </div>
+                        }
+                      }}
+                      onFieldSelect={(value, type) => {
+                        const transformation: Transformation = {
+                          field: {
+                            slug: field.slug
+                          },
+                          name: type
+                        }
+                        switch (type) {
+                          case 'static':
+                            transformation.static_value = value
+                            break
+                          case 'date':
+                          case 'direct':
+                          default:
+                            transformation.source_pointer = value
+                            break
+                        }
+
+                        const clonedObjectMapping =
+                          window.structuredClone<ObjectMapping>(
+                            currentObjectMapping
+                          )
+                        if (existingFieldIndex > -1) {
+                          clonedObjectMapping.transformations[
+                            existingFieldIndex
+                          ] = transformation
+                        } else {
+                          clonedObjectMapping.transformations.push(
+                            transformation
+                          )
+                        }
+                        setCurrentObjectMapping(clonedObjectMapping)
+                      }}
+                      key={field.slug}
+                    />
                   )
                 }
               )}
@@ -712,13 +618,26 @@ const MappingScreen: FC<MappingScreenProps> = ({
       return developerObjects && userObjects && currentObjectMapping ? (
         <div className='flex flex-col h-[calc(100%-40px)]'>
           <div className='text-sm pt-2.5 pb-4 px-6'>
-            Choose how you want to handle changes when{' '}
-            {developerObjects[currentDeveloperObjectIndex].label} is updated
+            Choose how you want to handle events for{' '}
+            {developerObjects[currentDeveloperObjectIndex].label}
           </div>
           <div className='pb-2.5 flex flex-col grow overflow-y-auto'>
             <div className='grow'>
               {developerObjects[currentDeveloperObjectIndex].events?.map(
                 (event, index) => {
+                  const modifyEventTransformations = (
+                    modification: (transformations: Transformation[]) => void
+                  ) => {
+                    const clonedObjectMapping =
+                      window.structuredClone<ObjectMapping>(
+                        currentObjectMapping
+                      )
+                    modification(
+                      clonedObjectMapping.event_actions[existingEventIndex]
+                        .transformations
+                    )
+                    setCurrentObjectMapping(clonedObjectMapping)
+                  }
                   const existingEventIndex =
                     currentObjectMapping.event_actions.findIndex(
                       (existingEvent) => existingEvent.event.slug === event.slug
@@ -745,52 +664,94 @@ const MappingScreen: FC<MappingScreenProps> = ({
                         if (existingEventIndex > -1) {
                           clonedObjectMapping.event_actions[
                             existingEventIndex
-                          ] = {
-                            ...newEvent,
-                            transformations:
-                              clonedObjectMapping.event_actions[
-                                existingEventIndex
-                              ].transformations
-                          }
+                          ] = newEvent
                         } else {
                           clonedObjectMapping.event_actions.push(newEvent)
                         }
                         setCurrentObjectMapping(clonedObjectMapping)
                       }}
-                      onPayloadFieldSelect={(
-                        value,
-                        type,
-                        payloadField,
-                        existingFieldIndex
-                      ) => {
-                        const transformation: Transformation = {
-                          field: { slug: payloadField.slug },
-                          name: type
-                        }
-                        switch (type) {
-                          case 'static':
-                            transformation.static_value = value
-                            break
-                          case 'direct':
-                          default:
-                            transformation.source_pointer = value
-                            break
-                        }
+                      updateAction={{
+                        addUserDefinedField: () => {
+                          modifyEventTransformations((transformations) => {
+                            transformations.push({
+                              name: 'static'
+                            })
+                          })
+                        },
+                        removeUserDefinedField: (index) => {
+                          modifyEventTransformations((transformations) => {
+                            transformations.splice(index, 1)
+                          })
+                        },
+                        onUserDefinedSelectField: (value, index) => {
+                          modifyEventTransformations((transformations) => {
+                            transformations[index].source_pointer = value
+                          })
+                        },
+                        onUserDefinedSelectValue: (value, index) => {
+                          modifyEventTransformations((transformations) => {
+                            transformations[index].static_value = value
+                          })
+                        },
+                        onPayloadFieldSelect: (
+                          value,
+                          type,
+                          payloadField,
+                          existingFieldIndex
+                        ) => {
+                          const transformation: Transformation = {
+                            field: { slug: payloadField.slug },
+                            name: type
+                          }
+                          switch (type) {
+                            case 'static':
+                              transformation.static_value = value
+                              break
+                            case 'direct':
+                            default:
+                              transformation.source_pointer = value
+                              break
+                          }
 
-                        const clonedObjectMapping =
-                          window.structuredClone<ObjectMapping>(
-                            currentObjectMapping
-                          )
-                        if (existingFieldIndex > -1) {
-                          clonedObjectMapping.event_actions[
-                            existingEventIndex
-                          ].transformations[existingFieldIndex] = transformation
-                        } else {
-                          clonedObjectMapping.event_actions[
-                            existingEventIndex
-                          ].transformations.push(transformation)
+                          modifyEventTransformations((transformations) => {
+                            if (existingFieldIndex > -1) {
+                              transformations[existingFieldIndex] =
+                                transformation
+                            } else {
+                              transformations.push(transformation)
+                            }
+                          })
                         }
-                        setCurrentObjectMapping(clonedObjectMapping)
+                      }}
+                      searchAction={{
+                        addSearchFilter: () => {
+                          modifyEventTransformations((transformations) => {
+                            transformations.push({
+                              name: 'direct'
+                            })
+                          })
+                        },
+                        onFilterSelectOperator: (value, index) => {
+                          modifyEventTransformations((transformations) => {
+                            transformations[index].criteria_operator = value
+                          })
+                        },
+                        onFilterSelectPayloadValue: (value, index) => {
+                          modifyEventTransformations((transformations) => {
+                            transformations[index].field = {
+                              slug: value
+                            }
+                            transformations[index].name = 'direct'
+                            delete transformations[index].static_value
+                          })
+                        },
+                        onFilterSelectStaticValue: (value, index) => {
+                          modifyEventTransformations((transformations) => {
+                            transformations[index].static_value = value
+                            transformations[index].name = 'static'
+                            delete transformations[index].field
+                          })
+                        }
                       }}
                       key={event.slug}
                     />

@@ -156,7 +156,11 @@ const ComboBox: FC<ComboBoxProps> = ({
             {allowFiltering ? (
               <input
                 className='box-border p-2 block w-full outline-none border-none text-sm bg-white placeholder:text-neutral-500'
-                placeholder='Type to filter or enter static data'
+                placeholder={
+                  options.length
+                    ? 'Type to filter or enter static data'
+                    : 'Type to enter static data'
+                }
                 type='text'
                 value={searchFieldText}
                 onChange={(event) => {

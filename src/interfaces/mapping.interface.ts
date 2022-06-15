@@ -2,6 +2,7 @@ export interface CRMObjectField {
   slug: string
   label: string
   description: string
+  additional_properties?: boolean
   simple_type: {
     type: string
     format: string | null
@@ -50,9 +51,10 @@ export interface APIObject {
 }
 
 export interface Transformation {
-  field: {
+  field?: {
     slug: string
   }
+  criteria_operator?: string
   name: string
   source_pointer?: string
   static_value?: string

@@ -9,12 +9,25 @@ interface ButtonProps {
 const Button: FC<ButtonProps> = ({ text, type, onClick }) => {
   let colors: string[] = []
   switch (type) {
+    case 'secondary':
+      colors = [
+        'bg-slate-50',
+        'hover:bg-slate-100',
+        'active:bg-slate-200',
+        'text-black'
+      ]
+      break
     case 'disabled':
-      colors = ['bg-neutral-400']
+      colors = ['bg-neutral-400', 'text-white']
       break
     case 'primary':
     default:
-      colors = ['bg-sky-500', 'hover:bg-sky-600', 'active:bg-sky-700']
+      colors = [
+        'bg-sky-500',
+        'hover:bg-sky-600',
+        'active:bg-sky-700',
+        'text-white'
+      ]
       break
   }
 
@@ -22,7 +35,6 @@ const Button: FC<ButtonProps> = ({ text, type, onClick }) => {
     <div
       className={[
         'text-center',
-        'text-white',
         'rounded',
         'shadow-md',
         'py-2',
