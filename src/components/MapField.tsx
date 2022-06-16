@@ -2,6 +2,7 @@ import React, { FC } from 'react'
 import {
   findSelectedOption,
   getSelectableCriteria,
+  getTransformationIndex,
   isSelectableCriteria,
   selectorsToOptions,
   supportedTransformations
@@ -11,25 +12,47 @@ import {
   CRMObjectField,
   ObjectMapping
 } from '../interfaces/mapping.interface'
+import AddAdditionalProperty from './AddAdditionalProperty'
 import CheckBox from './CheckBox'
 import ComboBox from './ComboBox'
+import Trash from './icons/Trash'
 
 interface MapFieldProps {
   field: CRMObjectField
+  fields: CRMObjectField[]
   existingFieldIndex: number
   currentUserObject: APIObject
   currentObjectMapping: ObjectMapping
-  onFieldSelect: (value: string, type: string) => void
-  onDateTransformationChange: (value: boolean) => void
+  onFieldSelect: (
+    value: string,
+    type: string,
+    slug: string,
+    existingFieldIndex: number
+  ) => void
+  onFieldRemove: (slug: string) => void
+  onDateTransformationChange: (
+    value: boolean,
+    existingFieldIndex: number
+  ) => void
+  onAddAdditionalProperty: (
+    slug: string,
+    parent: string,
+    simple_type: { type: string; format: string | null }
+  ) => void
+  onRemoveAdditionalProperty: (slug: string) => void
 }
 
 const MapField: FC<MapFieldProps> = ({
   field,
+  fields,
   existingFieldIndex,
   currentUserObject,
   currentObjectMapping,
   onFieldSelect,
-  onDateTransformationChange
+  onFieldRemove,
+  onDateTransformationChange,
+  onAddAdditionalProperty,
+  onRemoveAdditionalProperty
 }) => {
   const selected: {
     value: string | undefined
@@ -85,32 +108,110 @@ const MapField: FC<MapFieldProps> = ({
               'date'
             }
             disabled={disabled}
-            onChange={onDateTransformationChange}
+            onChange={(value) => {
+              onDateTransformationChange(value, existingFieldIndex)
+            }}
           />
         )
       }
     }
   }
 
+  const nestedFields = fields.filter(
+    (individualField) =>
+      individualField.parent_slug && individualField.parent_slug === field.slug
+  )
+
   return (
     <div className='py-3' key={field.slug}>
-      <div>{field.label}</div>
-      <div className='text-xs text-neutral-500 py-2.5'>{field.description}</div>
-      <ComboBox
-        placeholder='Choose data'
-        selected={selected}
-        options={selectorsToOptions([currentUserObject.selector])}
-        allowFiltering={true}
-        allowStatic={true}
-        criteria={(option) => {
-          return isSelectableCriteria(option, field)
-        }}
-        getSelectableCriteria={(option) => {
-          return getSelectableCriteria(option, field)
-        }}
-        onSelect={onFieldSelect}
-      />
-      {dateTransformation}
+      <div className='flex items-center justify-between'>
+        <div className='break-words w-[calc(100%-28px)]'>{field.label}</div>
+        {field.parent_slug ? (
+          <Trash
+            className='h-4 w-4 pl-3 shrink-0 fill-red-500 cursor-pointer'
+            onClick={() => {
+              onFieldRemove(field.slug)
+              onRemoveAdditionalProperty(field.slug)
+            }}
+          />
+        ) : null}
+      </div>
+      <div
+        className={[
+          'text-xs',
+          'text-neutral-500',
+          field.description ? 'py-2.5' : 'py-1'
+        ]
+          .join(' ')
+          .trim()}
+      >
+        {field.description}
+      </div>
+      {field.additional_properties && nestedFields.length ? (
+        <div className='pl-6'>
+          {nestedFields.map((nestedField) => {
+            const existingFieldIndex = getTransformationIndex(
+              nestedField.slug,
+              currentObjectMapping.transformations
+            )
+            return (
+              <MapField
+                field={nestedField}
+                fields={fields}
+                existingFieldIndex={existingFieldIndex}
+                currentUserObject={currentUserObject}
+                currentObjectMapping={currentObjectMapping}
+                onFieldSelect={onFieldSelect}
+                onFieldRemove={onFieldRemove}
+                onDateTransformationChange={onDateTransformationChange}
+                onAddAdditionalProperty={onAddAdditionalProperty}
+                onRemoveAdditionalProperty={onRemoveAdditionalProperty}
+                key={nestedField.slug}
+              />
+            )
+          })}
+        </div>
+      ) : (
+        <>
+          <ComboBox
+            placeholder='Choose data'
+            selected={selected}
+            options={selectorsToOptions([currentUserObject.selector])}
+            allowFiltering={true}
+            allowStatic={true}
+            criteria={(option) => {
+              return isSelectableCriteria(option, field)
+            }}
+            getSelectableCriteria={(option) => {
+              return getSelectableCriteria(option, field)
+            }}
+            onSelect={(value, type) => {
+              onFieldSelect(value, type, field.slug, existingFieldIndex)
+            }}
+            onDeselect={() => {
+              onFieldRemove(field.slug)
+            }}
+          />
+          {dateTransformation}
+        </>
+      )}
+      {field.additional_properties &&
+      field.simple_type.type === 'object' &&
+      !selected.value ? (
+        <div className='pl-6'>
+          {nestedFields.length ? null : (
+            <div className='pt-4 text-xs text-neutral-500'>
+              This field is extendable. Instead of selecting a single value from
+              your CRM, you may choose to create multiple nested properties.{' '}
+            </div>
+          )}
+          <AddAdditionalProperty
+            field={field}
+            fields={fields}
+            onAddAdditionalProperty={onAddAdditionalProperty}
+          />
+        </div>
+      ) : null}
     </div>
   )
 }

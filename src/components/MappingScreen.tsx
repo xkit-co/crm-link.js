@@ -519,8 +519,9 @@ const MappingScreen: FC<MappingScreenProps> = ({
           </div>
           <div className='pb-2.5 px-6 grow flex flex-col overflow-y-auto'>
             <div className='grow'>
-              {developerObjects[currentDeveloperObjectIndex].fields?.map(
-                (field) => {
+              {developerObjects[currentDeveloperObjectIndex].fields
+                ?.filter((field) => !field.parent_slug)
+                .map((field) => {
                   const existingFieldIndex = getTransformationIndex(
                     field.slug,
                     currentObjectMapping.transformations
@@ -528,10 +529,16 @@ const MappingScreen: FC<MappingScreenProps> = ({
                   return (
                     <MapField
                       field={field}
+                      fields={
+                        developerObjects[currentDeveloperObjectIndex].fields!
+                      }
                       existingFieldIndex={existingFieldIndex}
                       currentUserObject={userObjects[currentUserObjectIndex]}
                       currentObjectMapping={currentObjectMapping}
-                      onDateTransformationChange={(value) => {
+                      onDateTransformationChange={(
+                        value,
+                        existingFieldIndex
+                      ) => {
                         if (existingFieldIndex > -1) {
                           const clonedObjectMapping =
                             window.structuredClone<ObjectMapping>(
@@ -543,10 +550,15 @@ const MappingScreen: FC<MappingScreenProps> = ({
                           setCurrentObjectMapping(clonedObjectMapping)
                         }
                       }}
-                      onFieldSelect={(value, type) => {
+                      onFieldSelect={(
+                        value,
+                        type,
+                        slug,
+                        existingFieldIndex
+                      ) => {
                         const transformation: Transformation = {
                           field: {
-                            slug: field.slug
+                            slug
                           },
                           name: type
                         }
@@ -576,11 +588,54 @@ const MappingScreen: FC<MappingScreenProps> = ({
                         }
                         setCurrentObjectMapping(clonedObjectMapping)
                       }}
+                      onFieldRemove={(slug) => {
+                        const transformationIndex = getTransformationIndex(
+                          slug,
+                          currentObjectMapping.transformations
+                        )
+                        if (transformationIndex > -1) {
+                          const clonedObjectMapping =
+                            window.structuredClone<ObjectMapping>(
+                              currentObjectMapping
+                            )
+                          clonedObjectMapping.transformations.splice(
+                            transformationIndex,
+                            1
+                          )
+                          setCurrentObjectMapping(clonedObjectMapping)
+                        }
+                      }}
+                      onAddAdditionalProperty={(slug, parent, simple_type) => {
+                        const clonedDeveloperObjects =
+                          window.structuredClone<CRMObject[]>(developerObjects)
+                        clonedDeveloperObjects[
+                          currentDeveloperObjectIndex
+                        ].fields?.push({
+                          slug,
+                          label: slug,
+                          description: '',
+                          simple_type,
+                          parent_slug: parent
+                        })
+                        setDeveloperObjects(clonedDeveloperObjects)
+                      }}
+                      onRemoveAdditionalProperty={(slug) => {
+                        const clonedDeveloperObjects =
+                          window.structuredClone<CRMObject[]>(developerObjects)
+                        const fieldIndex = clonedDeveloperObjects[
+                          currentDeveloperObjectIndex
+                        ].fields?.findIndex((field) => field.slug === slug)
+                        if (fieldIndex && fieldIndex > -1) {
+                          clonedDeveloperObjects[
+                            currentDeveloperObjectIndex
+                          ].fields?.splice(fieldIndex, 1)
+                        }
+                        setDeveloperObjects(clonedDeveloperObjects)
+                      }}
                       key={field.slug}
                     />
                   )
-                }
-              )}
+                })}
             </div>
             <div className='pt-6 pb-4'>
               <Button
@@ -721,6 +776,19 @@ const MappingScreen: FC<MappingScreenProps> = ({
                               transformations.push(transformation)
                             }
                           })
+                        },
+                        onPayloadFieldRemove: (slug) => {
+                          const transformationIndex = getTransformationIndex(
+                            slug,
+                            currentObjectMapping.event_actions[
+                              existingEventIndex
+                            ].transformations
+                          )
+                          if (transformationIndex > -1) {
+                            modifyEventTransformations((transformations) => {
+                              transformations.splice(transformationIndex, 1)
+                            })
+                          }
                         }
                       }}
                       searchAction={{

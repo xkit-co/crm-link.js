@@ -33,6 +33,7 @@ interface MapEventProps {
       payloadField: CRMObjectField,
       existingFieldIndex: number
     ) => void
+    onPayloadFieldRemove: (slug: string) => void
   }
   searchAction: {
     addSearchFilter: () => void
@@ -128,6 +129,9 @@ const MapEvent: FC<MapEventProps> = ({
                       field,
                       existingFieldIndex
                     )
+                  }}
+                  onDeselect={() => {
+                    updateAction.onPayloadFieldRemove(field.slug)
                   }}
                 />
               </div>

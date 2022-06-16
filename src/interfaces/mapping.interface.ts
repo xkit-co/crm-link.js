@@ -7,6 +7,7 @@ export interface CRMObjectField {
     type: string
     format: string | null
   }
+  parent_slug?: string
 }
 
 export interface CRMObjectEvent {

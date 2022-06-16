@@ -7,6 +7,7 @@ import {
 import Caret from './icons/Caret'
 import Minus from './icons/Minus'
 import Plus from './icons/Plus'
+import Cross from './icons/Cross'
 
 export interface Option {
   label: string
@@ -28,6 +29,7 @@ interface ComboBoxProps {
   criteria?: (option: Option) => boolean
   getSelectableCriteria?: (option: Option) => InputType | undefined
   onSelect: (value: string, type: string) => void
+  onDeselect?: () => void
 }
 
 const ComboBox: FC<ComboBoxProps> = ({
@@ -38,7 +40,8 @@ const ComboBox: FC<ComboBoxProps> = ({
   selected,
   criteria,
   getSelectableCriteria,
-  onSelect
+  onSelect,
+  onDeselect
 }) => {
   const [visible, setVisible] = useState<boolean>(false)
   const [searchFieldText, setSearchFieldText] = useState<string>('')
@@ -106,7 +109,8 @@ const ComboBox: FC<ComboBoxProps> = ({
           className={[
             'overflow-hidden',
             'whitespace-nowrap',
-            'text-ellipsis pr-2',
+            'text-ellipsis',
+            'pr-2',
             selectedOption ? '' : 'text-neutral-500'
           ]
             .join(' ')
@@ -114,7 +118,17 @@ const ComboBox: FC<ComboBoxProps> = ({
         >
           {selectedOption ? selectedOption.label : placeholder}
         </div>
-        <Caret className='h-4 w-4 fill-neutral-400 shrink-0' />
+        {onDeselect && selectedOption ? (
+          <Cross
+            className='h-4 w-4 shrink-0 cursor-pointer'
+            onClick={(event) => {
+              event.stopPropagation()
+              onDeselect()
+            }}
+          />
+        ) : (
+          <Caret className='h-4 w-4 fill-neutral-400 shrink-0' />
+        )}
       </div>
       <div
         className={[

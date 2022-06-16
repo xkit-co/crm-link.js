@@ -64,7 +64,17 @@ export const isAllFieldsSelected = (
   }
   for (const field of developerObject.fields || []) {
     if (!(getTransformationIndex(field.slug, transformations) > -1)) {
-      return false
+      if (
+        !(
+          field.additional_properties &&
+          field.simple_type.type === 'object' &&
+          developerObject.fields.find(
+            (individualField) => individualField.parent_slug === field.slug
+          )
+        )
+      ) {
+        return false
+      }
     }
   }
   return true
