@@ -1,19 +1,19 @@
-import {
-  APIObject,
-  CRMObjectEvent,
-  CRMObjectField,
-  ObjectMapping
-} from '../interfaces/mapping.interface'
 import React, { FC } from 'react'
 import {
   getTransformationIndex,
   isSelectableCriteria,
   selectorsToOptions
-} from '../functions/mapping'
-import Accordion from './Accordion'
-import ComboBox, { Option } from './ComboBox'
-import Button from './Button'
-import Trash from './icons/Trash'
+} from '../../functions/mapping'
+import {
+  APIObject,
+  CRMObjectEvent,
+  CRMObjectField,
+  ObjectMapping
+} from '../../interfaces/mapping.interface'
+import Accordion from '../Accordion'
+import Button from '../Button'
+import ComboBox, { Option } from '../ComboBox'
+import Trash from '../icons/Trash'
 
 interface MapEventProps {
   event: CRMObjectEvent

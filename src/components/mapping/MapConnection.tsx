@@ -1,9 +1,9 @@
 import { Connection } from '@xkit-co/xkit.js'
 import React, { FC, useState } from 'react'
-import Button from './Button'
-import XkitBranding from './XkitBranding'
+import Button from '../Button'
+import XkitBranding from '../XkitBranding'
 
-interface ConnectionStageProps {
+interface MapConnectionProps {
   connection: Connection
   reconnect: (connection: Connection) => Promise<void>
   disconnect: (connection: Connection) => Promise<void>
@@ -11,7 +11,7 @@ interface ConnectionStageProps {
   removeBranding: boolean
 }
 
-const ConnectionStage: FC<ConnectionStageProps> = ({
+const MapConnection: FC<MapConnectionProps> = ({
   connection,
   reconnect,
   disconnect,
@@ -78,4 +78,4 @@ const ConnectionStage: FC<ConnectionStageProps> = ({
   )
 }
 
-export default ConnectionStage
+export default MapConnection

@@ -1,7 +1,7 @@
 import React, { FC, useState } from 'react'
-import { CRMObjectField } from '../interfaces/mapping.interface'
-import Button from './Button'
-import ComboBox from './ComboBox'
+import { CRMObjectField } from '../../interfaces/mapping.interface'
+import Button from '../Button'
+import ComboBox from '../ComboBox'
 
 interface AddAdditionalPropertyProps {
   field: CRMObjectField
@@ -62,7 +62,7 @@ const AddAdditionalProperty: FC<AddAdditionalPropertyProps> = ({
       <div className='pt-2'>
         <Button
           type={slug && !isDuplicateSlug && type ? 'secondary' : 'disabled'}
-          text='Add a nested property'
+          text='Add a custom field'
           onClick={() => {
             if (slug && !isDuplicateSlug && type) {
               const simple_type: { type: string; format: string | null } = {

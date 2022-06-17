@@ -8,7 +8,7 @@ import {
 import { Screen } from '../interfaces/screen.interface'
 import CRMConnector from './CRMConnector'
 import Spinner from './icons/Spinner'
-import MappingScreen from './MappingScreen'
+import MappingScreen from './mapping/MappingScreen'
 import ModalLayout from './ModalLayout'
 import XkitBranding from './XkitBranding'
 

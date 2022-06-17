@@ -1,3 +1,13 @@
+export enum MappingStages {
+  Loading,
+  Configuration,
+  Connection,
+  Mappings,
+  Objects,
+  Fields,
+  Events
+}
+
 export interface CRMObjectField {
   slug: string
   label: string

@@ -2,133 +2,17 @@
 
 ## Installation
 
-### With React
-
-**npm**
-
-```bash
-npm install @xkit-co/crm-link.js
-```
-
-**yarn**
-
-```bash
-yarn add @xkit-co/crm-link.js
-```
-
-**Usage example**
-
-```js
-import linkCRM from '@xkit-co/crm-link.js'
-
-export default function App() {
-  return (
-    <button
-      onClick={async () => {
-        // Call your backend route to fetch a context token, see: https://docs.xkit.co/docs/xkit-contexts
-        const { token } = await fetch('/xkit/token')
-        try {
-          const connection = await linkCRM('example.xkit.co', token)
-          // ...
-        } catch (error) {
-          // ...
-        }
-      }}
-    >
-      Connect CRM
-    </button>
-  )
-}
-```
-
-### With other web frameworks
-
-You will need to add `react` and `react-dom` along with `@xkit-co/crm-link.js`.
-
-From our testing, this adds no more than 45 KB to your final browser bundle.
-
-**npm**
-
-```bash
-npm install react react-dom @xkit-co/crm-link.js
-```
-
-**yarn**
-
-```bash
-yarn add react react-dom @xkit-co/crm-link.js
-```
-
-**Usage example**
-
-The process is similar to the example above for React, but where you call `linkCRM()` might change depending on your framework.
-
-The example that follows is for Vue:
-
-```vue
-<template>
-  <button @click="handleClick">Connect CRM</button>
-</template>
-
-<script>
-import linkCRM from '@xkit-co/crm-link.js'
-
-export default {
-  name: 'App',
-  methods: {
-    handleClick: async () => {
-      // Call your backend route to fetch a context token, see: https://docs.xkit.co/docs/xkit-contexts
-      const { token } = await fetch('/xkit/token')
-      try {
-        const connection = await linkCRM('example.xkit.co', token)
-        // ...
-      } catch (error) {
-        // ...
-      }
-    }
-  }
-}
-</script>
-
-<style></style>
-```
-
-### Without a web framework
-
-You can use the browser script hosted through any public npm CDN. The example that follows uses UNPKG.
-
-Within your document's `<head>`:
-
-```html
-<script src="https://unpkg.com/@xkit-co/crm-link.js@^1/dist/browser.js"></script>
-<script>
-  const handleClick = async () => {
-    // Call your backend route to fetch a context token, see: https://docs.xkit.co/docs/xkit-contexts
-    const { token } = await fetch('/xkit/token')
-    try {
-      const connection = await linkCRM('example.xkit.co', token)
-      // ...
-    } catch (error) {
-      // ...
-    }
-  }
-</script>
-```
-
-Within your document's `<body>`:
-
-```html
-<button onclick="handleClick()">Connect CRM</button>
-```
+[Refer to documentation](https://xkit.co/docs/crm-link#install-crm-linkjs)
 
 ## API
 
 `linkCRM()`
 
-| Argument | Type     | Description                                                                                                                                                     |
-| -------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `domain` | `string` | The domain string of your Xkit application. This can be viewed and configured in the [Xkit dev portal](https://app.xkit.co/).                                   |
-| `token`  | `string` | The Xkit context token that is fetched from your application's backend. Refer to the [Xkit documentation on Contexts](https://docs.xkit.co/docs/xkit-contexts). |
+| Argument  | Type     | Description                                                                                                                                               |
+| --------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `domain`  | `string` | The domain string of your Xkit application. This can be viewed and configured in the [Xkit developer portal](https://app.xkit.co/).                       |
+| `token`   | `string` | The Xkit context token that is fetched from your application's backend. Refer to the [Xkit documentation](https://xkit.co/docs/crm-link#context-token).   |
+| `mapping` | `object` | The configuration object by which the user will map data from their CRM. Refer to the [Xkit documentation](https://xkit.co/docs/crm-api#add-to-crm-link). |
 
 | Return Type           | Description                                                                                                                 |
 | --------------------- | --------------------------------------------------------------------------------------------------------------------------- |

@@ -6,16 +6,16 @@ import {
   isSelectableCriteria,
   selectorsToOptions,
   supportedTransformations
-} from '../functions/mapping'
+} from '../../functions/mapping'
 import {
   APIObject,
   CRMObjectField,
   ObjectMapping
-} from '../interfaces/mapping.interface'
+} from '../../interfaces/mapping.interface'
+import CheckBox from '../CheckBox'
+import ComboBox from '../ComboBox'
+import Trash from '../icons/Trash'
 import AddAdditionalProperty from './AddAdditionalProperty'
-import CheckBox from './CheckBox'
-import ComboBox from './ComboBox'
-import Trash from './icons/Trash'
 
 interface MapFieldProps {
   field: CRMObjectField
@@ -202,7 +202,7 @@ const MapField: FC<MapFieldProps> = ({
           {nestedFields.length ? null : (
             <div className='pt-4 text-xs text-neutral-500'>
               This field is extendable. Instead of selecting a single value from
-              your CRM, you may choose to create multiple nested properties.{' '}
+              your CRM, you may choose to create multiple custom fields.{' '}
             </div>
           )}
           <AddAdditionalProperty
