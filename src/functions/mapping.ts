@@ -66,7 +66,6 @@ export const isAllFieldsSelected = (
     if (!(getTransformationIndex(field.slug, transformations) > -1)) {
       if (
         !(
-          field.additional_properties &&
           field.simple_type.type === 'object' &&
           developerObject.fields.find(
             (individualField) => individualField.parent_slug === field.slug

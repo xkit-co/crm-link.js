@@ -147,7 +147,7 @@ const MapField: FC<MapFieldProps> = ({
       >
         {field.description}
       </div>
-      {field.additional_properties && nestedFields.length ? (
+      {nestedFields.length ? (
         <div className='pl-6'>
           {nestedFields.map((nestedField) => {
             const existingFieldIndex = getTransformationIndex(
@@ -195,9 +195,7 @@ const MapField: FC<MapFieldProps> = ({
           {dateTransformation}
         </>
       )}
-      {field.additional_properties &&
-      field.simple_type.type === 'object' &&
-      !selected.value ? (
+      {field.simple_type.type === 'object' && !selected.value ? (
         <div className='pl-6'>
           {nestedFields.length ? null : (
             <div className='pt-4 text-xs text-neutral-500'>

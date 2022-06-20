@@ -12,7 +12,6 @@ export interface CRMObjectField {
   slug: string
   label: string
   description: string
-  additional_properties?: boolean
   simple_type: {
     type: string
     format: string | null
