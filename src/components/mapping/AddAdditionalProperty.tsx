@@ -21,7 +21,10 @@ const AddAdditionalProperty: FC<AddAdditionalPropertyProps> = ({
   const [slug, setSlug] = useState<string>('')
   const [type, setType] = useState<string | undefined>(undefined)
 
-  const isDuplicateSlug = fields.findIndex((field) => field.slug === slug) > -1
+  const isDuplicateSlug =
+    fields.findIndex(
+      (individualField) => individualField.slug === `${field.slug}.${slug}`
+    ) > -1
 
   return (
     <div className='pt-4'>

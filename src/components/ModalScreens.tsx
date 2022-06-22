@@ -21,7 +21,9 @@ interface ModalScreensProps {
   disconnect: (connection: Connection) => Promise<void>
   listCRMObjects: () => Promise<void | CRMObject[]>
   listAPIObjects: (connection: Connection) => Promise<void | APIObject[]>
-  getMapping: (connection: Connection) => Promise<void | ObjectMapping[]>
+  getMapping: (
+    connection: Connection
+  ) => Promise<void | { mapping: ObjectMapping[]; objects: CRMObject[] }>
   saveMapping: (
     connection: Connection,
     CRMObjects: CRMObject[],

@@ -5,6 +5,7 @@ import {
   isAllEventsSelected,
   isAllFieldsSelected,
   isObjectSelected,
+  mergePreviouslyMappedNestedFields,
   removeMapping,
   updateMapping
 } from '../../functions/mapping'
@@ -31,7 +32,9 @@ declare const window: xkitBrowserWindow
 interface MappingScreenProps {
   listCRMObjects: () => Promise<void | CRMObject[]>
   listAPIObjects: (connection: Connection) => Promise<void | APIObject[]>
-  getMapping: (connection: Connection) => Promise<void | ObjectMapping[]>
+  getMapping: (
+    connection: Connection
+  ) => Promise<void | { mapping: ObjectMapping[]; objects: CRMObject[] }>
   saveMapping: (
     connection: Connection,
     CRMObjects: CRMObject[],
@@ -79,13 +82,17 @@ const MappingScreen: FC<MappingScreenProps> = ({
       if (CRMObjects) {
         const APIObjects = await listAPIObjects(connection)
         if (APIObjects) {
-          const mappings = await getMapping(connection)
-          if (mappings) {
-            setDeveloperObjects(CRMObjects)
+          const getMappingResponse = await getMapping(connection)
+          if (getMappingResponse) {
+            const updatedCRMObjects = mergePreviouslyMappedNestedFields(
+              CRMObjects,
+              getMappingResponse.objects
+            )
+            setDeveloperObjects(updatedCRMObjects)
             setUserObjects(APIObjects)
             setCurrentDeveloperObjectIndex(0)
             setCurrentUserObjectIndex(0)
-            setObjectMappings(mappings)
+            setObjectMappings(getMappingResponse.mapping)
             setCurrentStage(MappingStages.Configuration)
           }
         }
@@ -318,9 +325,9 @@ const MappingScreen: FC<MappingScreenProps> = ({
                         clonedDeveloperObjects[
                           currentDeveloperObjectIndex
                         ].fields?.push({
-                          slug,
+                          slug: `${parent}.${slug}`,
                           label: slug,
-                          description: '',
+                          description: slug,
                           simple_type,
                           parent_slug: parent
                         })

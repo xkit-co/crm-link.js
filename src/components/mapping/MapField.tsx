@@ -140,12 +140,12 @@ const MapField: FC<MapFieldProps> = ({
         className={[
           'text-xs',
           'text-neutral-500',
-          field.description ? 'py-2.5' : 'py-1'
+          field.parent_slug ? 'py-1' : 'py-2.5'
         ]
           .join(' ')
           .trim()}
       >
-        {field.description}
+        {field.parent_slug ? null : field.description}
       </div>
       {nestedFields.length ? (
         <div className='pl-6'>

@@ -127,10 +127,10 @@ const App: FC<AppProps> = ({
   const getMapping = async (connection: Connection) => {
     if (xkit && xkit.domain) {
       try {
-        const objectMappings = await xkit.getMapping(connection)
-        return objectMappings as ObjectMapping[]
+        const response = await xkit.getMapping(connection)
+        return response as { mapping: ObjectMapping[]; objects: CRMObject[] }
       } catch (error) {
-        return []
+        return { mapping: [], objects: [] }
       }
     } else {
       return reject('Could not identify session.')

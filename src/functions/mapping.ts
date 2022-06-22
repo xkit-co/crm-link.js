@@ -8,6 +8,9 @@ import {
 } from '../interfaces/mapping.interface'
 import React from 'react'
 import { Option } from '../components/ComboBox'
+import { xkitBrowserWindow } from '../interfaces/window.interface'
+
+declare const window: xkitBrowserWindow
 
 export const updateMapping = (
   currentObjectMapping: ObjectMapping,
@@ -229,4 +232,36 @@ export const findSelectedOption = (
     }
   }
   return undefined
+}
+
+export const mergePreviouslyMappedNestedFields = (
+  objects: CRMObject[],
+  objectsWithNestedFields: CRMObject[]
+) => {
+  const mergedObjects: CRMObject[] =
+    window.structuredClone<CRMObject[]>(objects)
+  for (const objectIndex in objects) {
+    for (const objectWithNestedFields of objectsWithNestedFields) {
+      if (
+        objects[objectIndex].id === objectWithNestedFields.id &&
+        objects[objectIndex].fields &&
+        objectWithNestedFields.fields
+      ) {
+        for (const possibleNestedfield of objectWithNestedFields.fields) {
+          if (
+            possibleNestedfield.parent_slug &&
+            objects[objectIndex].fields!.find(
+              (field) => field.slug === possibleNestedfield.parent_slug
+            )
+          ) {
+            mergedObjects[objectIndex].fields = [
+              ...mergedObjects[objectIndex].fields!,
+              possibleNestedfield
+            ]
+          }
+        }
+      }
+    }
+  }
+  return mergedObjects
 }
