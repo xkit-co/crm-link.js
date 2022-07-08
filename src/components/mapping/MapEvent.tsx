@@ -60,6 +60,7 @@ const MapEvent: FC<MapEventProps> = ({
 
   let eventHandlingForm = null
   switch (selectedActionType) {
+    case 'create':
     case 'update': {
       const userDefinedTransformations =
         existingEventIndex > -1
@@ -78,8 +79,8 @@ const MapEvent: FC<MapEventProps> = ({
       eventHandlingForm = (
         <div className='pl-6'>
           <div className='text-xs text-neutral-500 py-2.5'>
-            Select fields to update from your CRM that correspond to these
-            payload values
+            Select fields to {selectedActionType} in your CRM that correspond to
+            these payload values
           </div>
           {event.fields.map((field) => {
             const existingFieldIndex = getTransformationIndex(
@@ -138,8 +139,8 @@ const MapEvent: FC<MapEventProps> = ({
             )
           })}
           <div className='text-xs text-neutral-500 py-2.5 mt-3 border-t border-b-0 border-l-0 border-r-0 border-solid border-neutral-200'>
-            Configure fields in your CRM to be updated with static values when
-            this event is triggered
+            Configure fields in your CRM to {selectedActionType} with static
+            values when this event is triggered
           </div>
           {userDefinedTransformations.map(({ transformation, index }) => (
             <div className='py-3 flex items-center justify-between' key={index}>
@@ -330,6 +331,9 @@ const MapEvent: FC<MapEventProps> = ({
   switch (event.type) {
     case 'update':
       availableActions = [{ label: 'Update existing records', value: 'update' }]
+      break
+    case 'create':
+      availableActions = [{ label: 'Create a new record', value: 'create' }]
       break
     case 'search':
       availableActions = [{ label: 'Build search query', value: 'search' }]
