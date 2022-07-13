@@ -1,3 +1,8 @@
+export interface Mapping {
+  objects?: unknown
+  connectionID?: string
+}
+
 export enum MappingStages {
   Loading,
   Configuration,

@@ -3,6 +3,7 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import App from './components/App'
 import styles from './index.inline.css'
+import { Mapping } from './interfaces/mapping.interface'
 
 const scope = document.body
   .appendChild(document.createElement('div'))
@@ -27,7 +28,7 @@ document.head.appendChild(appFonts)
 const renderApp = (
   visible: boolean,
   token: string | undefined,
-  mapping: unknown | undefined,
+  mapping: Mapping,
   xkit: XkitJs | undefined,
   resolve: (connection: Connection) => void,
   reject: (message: string) => void
@@ -49,7 +50,7 @@ const hideModal = () => {
   renderApp(
     false,
     undefined,
-    undefined,
+    {},
     undefined,
     () => undefined,
     () => undefined
@@ -59,8 +60,8 @@ const hideModal = () => {
 const linkCRM = (
   domain: string,
   token: string,
-  mapping: unknown
-): Promise<Connection> => {
+  mapping: Mapping
+): Promise<string> => {
   const xkit = createXkit(domain)
   return new Promise((resolve, reject) => {
     if (token) {
@@ -71,7 +72,7 @@ const linkCRM = (
         xkit,
         (connection: Connection) => {
           hideModal()
-          resolve(connection)
+          resolve(connection.id)
         },
         (message: string) => {
           hideModal()

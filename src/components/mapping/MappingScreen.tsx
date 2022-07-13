@@ -1,10 +1,13 @@
-import { Connection } from '@xkit-co/xkit.js'
+import { Connection, XkitJs } from '@xkit-co/xkit.js'
 import React, { FC, useEffect, useState } from 'react'
 import {
+  getMapping,
   getTransformationIndex,
   isAllEventsSelected,
   isAllFieldsSelected,
   isObjectSelected,
+  listAPIObjects,
+  listCRMObjects,
   mergePreviouslyMappedNestedFields,
   removeMapping,
   updateMapping
@@ -12,6 +15,7 @@ import {
 import {
   APIObject,
   CRMObject,
+  Mapping,
   MappingStages,
   ObjectMapping,
   Transformation
@@ -30,30 +34,22 @@ import MapObjectView from './MapObjectView'
 declare const window: xkitBrowserWindow
 
 interface MappingScreenProps {
-  listCRMObjects: () => Promise<void | CRMObject[]>
-  listAPIObjects: (connection: Connection) => Promise<void | APIObject[]>
-  getMapping: (
-    connection: Connection
-  ) => Promise<void | { mapping: ObjectMapping[]; objects: CRMObject[] }>
-  saveMapping: (
-    connection: Connection,
-    CRMObjects: CRMObject[],
-    objectMappings: ObjectMapping[]
-  ) => Promise<void>
+  xkit?: XkitJs
+  mapping: Mapping
   connection: Connection
   resolve: (connection: Connection) => void
+  reject: (message: string) => void
   reconnect: (connection: Connection) => Promise<void>
   disconnect: (connection: Connection) => Promise<void>
   removeBranding: boolean
 }
 
 const MappingScreen: FC<MappingScreenProps> = ({
-  listCRMObjects,
-  listAPIObjects,
-  getMapping,
-  saveMapping,
+  xkit,
+  mapping,
   connection,
   resolve,
+  reject,
   reconnect,
   disconnect,
   removeBranding
@@ -78,11 +74,11 @@ const MappingScreen: FC<MappingScreenProps> = ({
 
   useEffect(() => {
     const loadObjects = async () => {
-      const CRMObjects = await listCRMObjects()
+      const CRMObjects = await listCRMObjects(xkit, mapping, reject)
       if (CRMObjects) {
-        const APIObjects = await listAPIObjects(connection)
+        const APIObjects = await listAPIObjects(xkit, connection, reject)
         if (APIObjects) {
-          const getMappingResponse = await getMapping(connection)
+          const getMappingResponse = await getMapping(xkit, connection, reject)
           if (getMappingResponse) {
             const updatedCRMObjects = mergePreviouslyMappedNestedFields(
               CRMObjects,
@@ -100,7 +96,7 @@ const MappingScreen: FC<MappingScreenProps> = ({
     }
     setCurrentStage(MappingStages.Loading)
     loadObjects()
-  }, [listCRMObjects, listAPIObjects, getMapping, connection])
+  }, [xkit, mapping, connection, reject])
 
   switch (currentStage) {
     case MappingStages.Loading:
@@ -130,6 +126,7 @@ const MappingScreen: FC<MappingScreenProps> = ({
     case MappingStages.Configuration:
       return developerObjects && connection ? (
         <MapConfiguration
+          xkit={xkit}
           connection={connection}
           developerObjects={developerObjects}
           objectMappings={objectMappings}
@@ -149,8 +146,8 @@ const MappingScreen: FC<MappingScreenProps> = ({
               setCurrentStage(MappingStages.Objects)
             }
           }}
-          saveMapping={saveMapping}
           resolve={resolve}
+          reject={reject}
           removeBranding={removeBranding}
         />
       ) : null
@@ -346,6 +343,7 @@ const MappingScreen: FC<MappingScreenProps> = ({
                         }
                         setDeveloperObjects(clonedDeveloperObjects)
                       }}
+                      isNestedField={false}
                       key={field.slug}
                     />
                   )

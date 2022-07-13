@@ -1,10 +1,6 @@
-import { Connection, Connector } from '@xkit-co/xkit.js'
+import { Connection, Connector, XkitJs } from '@xkit-co/xkit.js'
 import React, { FC } from 'react'
-import {
-  APIObject,
-  CRMObject,
-  ObjectMapping
-} from '../interfaces/mapping.interface'
+import { Mapping } from '../interfaces/mapping.interface'
 import { Screen } from '../interfaces/screen.interface'
 import CRMConnector from './CRMConnector'
 import Spinner from './icons/Spinner'
@@ -13,40 +9,32 @@ import ModalLayout from './ModalLayout'
 import XkitBranding from './XkitBranding'
 
 interface ModalScreensProps {
+  xkit?: XkitJs
   screen: Screen
   connectors: Connector[]
-  currentConnector: Connector | undefined
+  currentConnector?: Connector
+  mapping: Mapping
   connect: (connector: Connector) => Promise<void>
   reconnect: (connection: Connection) => Promise<void>
   disconnect: (connection: Connection) => Promise<void>
-  listCRMObjects: () => Promise<void | CRMObject[]>
-  listAPIObjects: (connection: Connection) => Promise<void | APIObject[]>
-  getMapping: (
-    connection: Connection
-  ) => Promise<void | { mapping: ObjectMapping[]; objects: CRMObject[] }>
-  saveMapping: (
-    connection: Connection,
-    CRMObjects: CRMObject[],
-    objectMappings: ObjectMapping[]
-  ) => Promise<void>
   currentConnection: Connection | undefined
   resolve: (connection: Connection) => void
+  reject: (message: string) => void
   removeBranding: boolean
 }
 
 const ModalScreens: FC<ModalScreensProps> = ({
+  xkit,
   screen,
   connectors,
   currentConnector,
+  mapping,
   connect,
   reconnect,
   disconnect,
-  listCRMObjects,
-  listAPIObjects,
-  getMapping,
-  saveMapping,
   currentConnection,
   resolve,
+  reject,
   removeBranding
 }) => {
   switch (screen) {
@@ -119,12 +107,11 @@ const ModalScreens: FC<ModalScreensProps> = ({
     case Screen.Mapping:
       return currentConnection ? (
         <MappingScreen
-          listCRMObjects={listCRMObjects}
-          listAPIObjects={listAPIObjects}
-          getMapping={getMapping}
-          saveMapping={saveMapping}
+          xkit={xkit}
+          mapping={mapping}
           connection={currentConnection}
           resolve={resolve}
+          reject={reject}
           reconnect={reconnect}
           disconnect={disconnect}
           removeBranding={removeBranding}

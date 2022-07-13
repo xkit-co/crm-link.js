@@ -1,21 +1,16 @@
 import { Connection, Connector, Platform, XkitJs } from '@xkit-co/xkit.js'
-import {
-  APIObject,
-  CRMObject,
-  ObjectMapping
-} from '../interfaces/mapping.interface'
-import { IKitAPIError } from '@xkit-co/xkit.js/lib/api/request'
 import React, { FC, useCallback, useEffect, useState } from 'react'
 import { friendlyMessage } from '../functions/errors'
+import { Mapping } from '../interfaces/mapping.interface'
 import { Screen } from '../interfaces/screen.interface'
 import Cross from './icons/Cross'
 import ModalScreens from './ModalScreens'
 
 interface AppProps {
   visible: boolean
-  token: string | undefined
-  mapping: unknown | undefined
-  xkit: XkitJs | undefined
+  token?: string
+  mapping: Mapping
+  xkit?: XkitJs
   resolve: (connection: Connection) => void
   reject: (message: string) => void
 }
@@ -82,77 +77,6 @@ const App: FC<AppProps> = ({
     }
   }
 
-  const listCRMObjects = async () => {
-    if (xkit && xkit.domain) {
-      try {
-        const response = (await xkit.listCRMObjects(mapping)) as {
-          errors?: { error: string; path: string }[]
-          objects: CRMObject[]
-        }
-        if (response.errors && response.errors.length) {
-          return reject(
-            `Error in mapping argument: ${response.errors[0].path} ${response.errors[0].error}`
-          )
-        }
-        return response.objects
-      } catch (error) {
-        return reject(friendlyMessage(error.message))
-      }
-    } else {
-      return reject('Could not identify session.')
-    }
-  }
-
-  const listAPIObjects = async (
-    connection: Connection
-  ): Promise<void | APIObject[]> => {
-    if (xkit && xkit.domain) {
-      try {
-        const objects = await xkit.listAPIObjects(connection)
-        return objects as APIObject[]
-      } catch (error) {
-        if (error instanceof IKitAPIError && error.statusCode === 424) {
-          // API objects are not ready yet. Keep polling and resolve only when we get the API objects
-          await new Promise((resolve) => setTimeout(resolve, 1000))
-          return await listAPIObjects(connection)
-        } else {
-          return reject(friendlyMessage(error.message))
-        }
-      }
-    } else {
-      return reject('Could not identify session.')
-    }
-  }
-
-  const getMapping = async (connection: Connection) => {
-    if (xkit && xkit.domain) {
-      try {
-        const response = await xkit.getMapping(connection)
-        return response as { mapping: ObjectMapping[]; objects: CRMObject[] }
-      } catch (error) {
-        return { mapping: [], objects: [] }
-      }
-    } else {
-      return reject('Could not identify session.')
-    }
-  }
-
-  const saveMapping = async (
-    connection: Connection,
-    CRMObjects: CRMObject[],
-    objectMappings: ObjectMapping[]
-  ) => {
-    if (xkit && xkit.domain) {
-      try {
-        return await xkit.saveMapping(connection, CRMObjects, objectMappings)
-      } catch (error) {
-        return reject(friendlyMessage(error.message))
-      }
-    } else {
-      return reject('Could not identify session.')
-    }
-  }
-
   const fetchCRMs = useCallback(
     async (token: string, xkit: XkitJs) => {
       try {
@@ -168,18 +92,24 @@ const App: FC<AppProps> = ({
         return reject('Could not get the current platform.')
       }
 
-      try {
-        const connections = await xkit.listConnections()
-        for (const connection of connections) {
+      if (mapping && mapping.connectionID) {
+        try {
+          const connection = await xkit.getConnection({
+            id: mapping.connectionID
+          })
           if (connection.connector.crm) {
             setCurrentConnector(connection.connector)
             setCurrentConnection(connection)
             setScreen(Screen.Mapping)
             return
+          } else {
+            return reject(
+              'Connection ID does not belong to a valid CRM connection'
+            )
           }
+        } catch (error) {
+          return reject('Error while fetching existing CRM connections')
         }
-      } catch (error) {
-        return reject('Error while fetching existing CRM connections')
       }
 
       let connectors: Connector[] = []
@@ -197,7 +127,7 @@ const App: FC<AppProps> = ({
         return reject('There are no CRMs available.')
       }
     },
-    [reject]
+    [reject, mapping]
   )
 
   useEffect(() => {
@@ -205,6 +135,7 @@ const App: FC<AppProps> = ({
       fetchCRMs(token, xkit)
     } else {
       setCurrentConnector(undefined)
+      setCurrentConnection(undefined)
     }
     setScreen(Screen.Loading)
   }, [visible, token, xkit, fetchCRMs])
@@ -258,18 +189,17 @@ const App: FC<AppProps> = ({
             )}
           </div>
           <ModalScreens
+            xkit={xkit}
             screen={screen}
             connectors={connectors}
             currentConnector={currentConnector}
+            mapping={mapping}
             connect={connect}
             reconnect={reconnect}
             disconnect={disconnect}
-            listCRMObjects={listCRMObjects}
-            listAPIObjects={listAPIObjects}
-            getMapping={getMapping}
-            saveMapping={saveMapping}
             currentConnection={currentConnection}
             resolve={resolve}
+            reject={reject}
             removeBranding={platform ? platform.remove_branding : false}
           />
         </div>

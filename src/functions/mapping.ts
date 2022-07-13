@@ -1,14 +1,19 @@
+import { Connection, XkitJs } from '@xkit-co/xkit.js'
+import { IKitAPIError } from '@xkit-co/xkit.js/lib/api/request'
+import React from 'react'
+import { Option } from '../components/ComboBox'
 import {
+  APIObject,
   CRMObject,
   CRMObjectField,
   InputType,
+  Mapping,
   ObjectMapping,
   Selector,
   Transformation
 } from '../interfaces/mapping.interface'
-import React from 'react'
-import { Option } from '../components/ComboBox'
 import { xkitBrowserWindow } from '../interfaces/window.interface'
+import { friendlyMessage } from './errors'
 
 declare const window: xkitBrowserWindow
 
@@ -264,4 +269,92 @@ export const mergePreviouslyMappedNestedFields = (
     }
   }
   return mergedObjects
+}
+
+export const listCRMObjects = async (
+  xkit: XkitJs | undefined,
+  mapping: Mapping,
+  reject: (message: string) => void
+) => {
+  if (xkit && xkit.domain) {
+    if (!mapping || !mapping.objects) {
+      return []
+    }
+    try {
+      const response = (await xkit.listCRMObjects({
+        objects: mapping.objects
+      })) as {
+        errors?: { error: string; path: string }[]
+        objects: CRMObject[]
+      }
+      if (response.errors && response.errors.length) {
+        return reject(
+          `Error in mapping argument: ${response.errors[0].path} ${response.errors[0].error}`
+        )
+      }
+      return response.objects
+    } catch (error) {
+      return reject(friendlyMessage(error.message))
+    }
+  } else {
+    return reject('Could not identify session.')
+  }
+}
+
+export const listAPIObjects = async (
+  xkit: XkitJs | undefined,
+  connection: Connection,
+  reject: (message: string) => void
+): Promise<void | APIObject[]> => {
+  if (xkit && xkit.domain) {
+    try {
+      const objects = await xkit.listAPIObjects(connection)
+      return objects as APIObject[]
+    } catch (error) {
+      if (error instanceof IKitAPIError && error.statusCode === 424) {
+        // API objects are not ready yet. Keep polling and resolve only when we get the API objects
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+        return await listAPIObjects(xkit, connection, reject)
+      } else {
+        return reject(friendlyMessage(error.message))
+      }
+    }
+  } else {
+    return reject('Could not identify session.')
+  }
+}
+
+export const getMapping = async (
+  xkit: XkitJs | undefined,
+  connection: Connection,
+  reject: (message: string) => void
+) => {
+  if (xkit && xkit.domain) {
+    try {
+      const response = await xkit.getMapping(connection)
+      return response as { mapping: ObjectMapping[]; objects: CRMObject[] }
+    } catch (error) {
+      return { mapping: [], objects: [] }
+    }
+  } else {
+    return reject('Could not identify session.')
+  }
+}
+
+export const saveMapping = async (
+  xkit: XkitJs | undefined,
+  connection: Connection,
+  CRMObjects: CRMObject[],
+  objectMappings: ObjectMapping[],
+  reject: (message: string) => void
+) => {
+  if (xkit && xkit.domain) {
+    try {
+      return await xkit.saveMapping(connection, CRMObjects, objectMappings)
+    } catch (error) {
+      return reject(friendlyMessage(error.message))
+    }
+  } else {
+    return reject('Could not identify session.')
+  }
 }

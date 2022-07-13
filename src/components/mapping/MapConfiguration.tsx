@@ -1,6 +1,10 @@
-import { Connection } from '@xkit-co/xkit.js'
+import { Connection, XkitJs } from '@xkit-co/xkit.js'
 import React, { FC, useState } from 'react'
-import { isAllObjectsSelected, isObjectSelected } from '../../functions/mapping'
+import {
+  isAllObjectsSelected,
+  isObjectSelected,
+  saveMapping
+} from '../../functions/mapping'
 import { CRMObject, ObjectMapping } from '../../interfaces/mapping.interface'
 import Button from '../Button'
 import Spinner from '../icons/Spinner'
@@ -9,28 +13,26 @@ import Warn from '../icons/Warn'
 import XkitBranding from '../XkitBranding'
 
 interface MapConfigurationProps {
+  xkit?: XkitJs
   connection: Connection
   developerObjects: CRMObject[]
   objectMappings: ObjectMapping[]
   onSelectConnection: () => void
   onSelectDeveloperObject: (index: number) => void
-  saveMapping: (
-    connection: Connection,
-    CRMObjects: CRMObject[],
-    objectMappings: ObjectMapping[]
-  ) => Promise<void>
   resolve: (connection: Connection) => void
+  reject: (message: string) => void
   removeBranding: boolean
 }
 
 const MapConfiguration: FC<MapConfigurationProps> = ({
+  xkit,
   connection,
   developerObjects,
   objectMappings,
   onSelectConnection,
   onSelectDeveloperObject,
-  saveMapping,
   resolve,
+  reject,
   removeBranding
 }) => {
   const [submitting, setSubmitting] = useState<boolean>(false)
@@ -53,7 +55,9 @@ const MapConfiguration: FC<MapConfigurationProps> = ({
         </div>
       </div>
       <div className='text-sm pt-2.5 pb-4 px-6'>
-        These objects require mapping to your CRM
+        {developerObjects.length
+          ? 'These objects require mapping to your CRM'
+          : 'No objects have been specified for mapping'}
       </div>
       <div className='pb-2.5 flex flex-col grow overflow-y-auto'>
         <div className='grow'>
@@ -107,7 +111,13 @@ const MapConfiguration: FC<MapConfigurationProps> = ({
                 isAllObjectsSelected(developerObjects, objectMappings)
               ) {
                 setSubmitting(true)
-                await saveMapping(connection, developerObjects, objectMappings)
+                await saveMapping(
+                  xkit,
+                  connection,
+                  developerObjects,
+                  objectMappings,
+                  reject
+                )
                 setSubmitting(false)
                 resolve(connection)
               }

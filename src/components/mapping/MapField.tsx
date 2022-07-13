@@ -40,6 +40,7 @@ interface MapFieldProps {
     simple_type: { type: string; format: string | null }
   ) => void
   onRemoveAdditionalProperty: (slug: string) => void
+  isNestedField: boolean
 }
 
 const MapField: FC<MapFieldProps> = ({
@@ -52,7 +53,8 @@ const MapField: FC<MapFieldProps> = ({
   onFieldRemove,
   onDateTransformationChange,
   onAddAdditionalProperty,
-  onRemoveAdditionalProperty
+  onRemoveAdditionalProperty,
+  isNestedField
 }) => {
   const selected: {
     value: string | undefined
@@ -166,6 +168,7 @@ const MapField: FC<MapFieldProps> = ({
                 onDateTransformationChange={onDateTransformationChange}
                 onAddAdditionalProperty={onAddAdditionalProperty}
                 onRemoveAdditionalProperty={onRemoveAdditionalProperty}
+                isNestedField={true}
                 key={nestedField.slug}
               />
             )
@@ -195,7 +198,9 @@ const MapField: FC<MapFieldProps> = ({
           {dateTransformation}
         </>
       )}
-      {field.simple_type.type === 'object' && !selected.value ? (
+      {field.simple_type.type === 'object' &&
+      !isNestedField && // Without this condition, user will be able to create nested fields inside nested fields indefinitely.
+      !selected.value ? (
         <div className='pl-6'>
           {nestedFields.length ? null : (
             <div className='pt-4 text-xs text-neutral-500'>

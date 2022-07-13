@@ -227,10 +227,7 @@ const MapEvent: FC<MapEventProps> = ({
                 key={index}
               >
                 <div>
-                  <div
-                    className='py-1 flex items-center justify-between'
-                    key={index}
-                  >
+                  <div className='py-1 flex items-center justify-between'>
                     <div className='text-sm w-[70px]'>Field</div>
                     <div className='w-[150px]'>
                       <ComboBox
@@ -249,10 +246,7 @@ const MapEvent: FC<MapEventProps> = ({
                       />
                     </div>
                   </div>
-                  <div
-                    className='py-1 flex items-center justify-between'
-                    key={index}
-                  >
+                  <div className='py-1 flex items-center justify-between'>
                     <div className='text-sm w-[70px]'>Operator</div>
                     <div className='w-[150px]'>
                       <ComboBox
