@@ -119,7 +119,11 @@ const MapEvent: FC<MapEventProps> = ({
                   placeholder='Select field'
                   selected={{ value: selectedValue, static: false }}
                   allowFiltering={true}
-                  options={selectorsToOptions([currentUserObject.selector])}
+                  options={
+                    currentUserObject.selector
+                      ? selectorsToOptions([currentUserObject.selector])
+                      : []
+                  }
                   criteria={(option) => {
                     return isSelectableCriteria(option, field)
                   }}
@@ -152,7 +156,11 @@ const MapEvent: FC<MapEventProps> = ({
                     static: false
                   }}
                   allowFiltering={true}
-                  options={selectorsToOptions([currentUserObject.selector])}
+                  options={
+                    currentUserObject.selector
+                      ? selectorsToOptions([currentUserObject.selector])
+                      : []
+                  }
                   criteria={(option) => {
                     return isSelectableCriteria(option, {
                       simple_type: {
@@ -237,9 +245,11 @@ const MapEvent: FC<MapEventProps> = ({
                           static: false
                         }}
                         allowFiltering={true}
-                        options={selectorsToOptions([
+                        options={
                           currentUserObject.selector
-                        ])}
+                            ? selectorsToOptions([currentUserObject.selector])
+                            : []
+                        }
                         onSelect={(value) => {
                           updateAction.onUserDefinedSelectField(value, index)
                         }}

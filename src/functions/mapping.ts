@@ -324,6 +324,24 @@ export const listAPIObjects = async (
   }
 }
 
+export const getAPIObject = async (
+  xkit: XkitJs | undefined,
+  connection: Connection,
+  apiObjectSlug: string,
+  reject: (message: string) => void
+): Promise<void | APIObject> => {
+  if (xkit && xkit.domain) {
+    try {
+      const object = await xkit.getAPIObject(connection, apiObjectSlug)
+      return object as APIObject
+    } catch (error) {
+      return reject(friendlyMessage(error.message))
+    }
+  } else {
+    return reject('Could not identify session.')
+  }
+}
+
 export const getMapping = async (
   xkit: XkitJs | undefined,
   connection: Connection,

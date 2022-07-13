@@ -1,6 +1,6 @@
 {
   "name": "@xkit-co/crm-link.js",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "CRM integrations on your application via XKit",
   "repository": {
     "type": "git",
@@ -20,6 +20,12 @@
     "lib": {
       "isLibrary": true,
       "distDir": "./dist"
+    },
+    "testapp": {
+      "distDir": "../../../testapp/priv/static/js/crm-link",
+      "engines": {
+        "browsers": "> 0.5%, last 2 versions, not dead"
+      }
     }
   },
   "main": "dist/index.js",
@@ -28,6 +34,7 @@
     "dist"
   ],
   "scripts": {
+    "watch-testapp": "chokidar \"src/**/*.tsx\" \"src/**/*.ts\" \"src/**/*.css\" --silent --initial -c \"rm -rf ../../../testapp/priv/static/js/crm-link && parcel build --no-cache src/browser.ts --target testapp\"",
     "dev": "chokidar \"src/**/*.tsx\" \"src/**/*.ts\" \"src/**/*.css\" --silent --initial -c \"rm -rf dist && parcel build --no-cache src/index.tsx --target lib && parcel build --no-cache src/browser.ts --target static\"",
     "build": "rm -rf dist && tsc --noEmit && parcel build --no-cache src/index.tsx --reporter @parcel/reporter-bundle-analyzer --target lib && parcel build --no-cache src/browser.ts --reporter @parcel/reporter-bundle-analyzer --target static",
     "types": "tsc --emitDeclarationOnly --declaration --outDir temp && mv temp/index.d.ts dist/index.d.ts && rm -rf temp",
@@ -65,6 +72,6 @@
     "react-dom": "16.9.0 - 18"
   },
   "dependencies": {
-    "@xkit-co/xkit.js": "^3.13.1"
+    "@xkit-co/xkit.js": "^3.14.0"
   }
 }

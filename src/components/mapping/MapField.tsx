@@ -80,10 +80,12 @@ const MapField: FC<MapFieldProps> = ({
 
   let dateTransformation = null
   if (selected.value && !selected.static) {
-    const option = findSelectedOption(
-      selectorsToOptions([currentUserObject.selector]),
-      selected.value
-    )
+    const option = currentUserObject.selector
+      ? findSelectedOption(
+          selectorsToOptions([currentUserObject.selector]),
+          selected.value
+        )
+      : undefined
     if (option) {
       const selectableCriteria = getSelectableCriteria(option, field)
       if (
@@ -179,7 +181,11 @@ const MapField: FC<MapFieldProps> = ({
           <ComboBox
             placeholder='Choose data'
             selected={selected}
-            options={selectorsToOptions([currentUserObject.selector])}
+            options={
+              currentUserObject.selector
+                ? selectorsToOptions([currentUserObject.selector])
+                : []
+            }
             allowFiltering={true}
             allowStatic={true}
             criteria={(option) => {

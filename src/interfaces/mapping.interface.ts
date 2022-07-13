@@ -62,7 +62,7 @@ export interface APIObject {
   slug: string
   label_one: string
   label_many: string
-  selector: Selector
+  selector?: Selector
 }
 
 export interface Transformation {

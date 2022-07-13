@@ -1,11 +1,11 @@
 import { Connection, XkitJs } from '@xkit-co/xkit.js'
 import React, { FC, useEffect, useState } from 'react'
 import {
+  getAPIObject,
   getMapping,
   getTransformationIndex,
   isAllEventsSelected,
   isAllFieldsSelected,
-  isObjectSelected,
   listAPIObjects,
   listCRMObjects,
   mergePreviouslyMappedNestedFields,
@@ -164,7 +164,7 @@ const MappingScreen: FC<MappingScreenProps> = ({
         />
       ) : null
     case MappingStages.Mappings:
-      return developerObjects && userObjects ? (
+      return developerObjects && userObjects && connection ? (
         <MapObjectView
           developerObject={developerObjects[currentDeveloperObjectIndex]}
           userObjects={userObjects}
@@ -175,20 +175,27 @@ const MappingScreen: FC<MappingScreenProps> = ({
               setCurrentStage(MappingStages.Objects)
             }
           }}
-          onSelectMapping={(userObjectIndex, objectMapping, stage) => {
+          onSelectMapping={async (userObjectIndex, objectMapping, stage) => {
+            if (!userObjects[userObjectIndex].selector) {
+              const object = await getAPIObject(
+                xkit,
+                connection,
+                userObjects[userObjectIndex].slug,
+                reject
+              )
+              if (object) {
+                const clonedUserObjects =
+                  window.structuredClone<APIObject[]>(userObjects)
+                clonedUserObjects[userObjectIndex].selector = object.selector
+                setUserObjects(clonedUserObjects)
+              }
+            }
             setCurrentUserObjectIndex(userObjectIndex)
             setCurrentObjectMapping(objectMapping)
             setCurrentStage(stage)
           }}
           onDone={() => {
-            if (
-              isObjectSelected(
-                developerObjects[currentDeveloperObjectIndex],
-                objectMappings
-              )
-            ) {
-              setCurrentStage(MappingStages.Configuration)
-            }
+            setCurrentStage(MappingStages.Configuration)
           }}
           removeBranding={removeBranding}
         />
