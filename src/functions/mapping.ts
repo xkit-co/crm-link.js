@@ -376,3 +376,77 @@ export const saveMapping = async (
     return reject('Could not identify session.')
   }
 }
+
+export const stripUnneededMappings = (
+  objects: CRMObject[],
+  mapping: ObjectMapping[]
+) => {
+  const essentialMapping: ObjectMapping[] = []
+  // Go through all mappings and include only those that belong to a CRM Object passed to CRM Link
+  for (const individualMapping of mapping) {
+    const CRMObject = objects.find(
+      (object) => object.id === individualMapping.crm_object_id
+    )
+    if (CRMObject) {
+      const transformations: Transformation[] = []
+      if (CRMObject.fields) {
+        // Go through all fields passed to CRM Link and include only their transformations if they exist
+        for (const field of CRMObject.fields) {
+          const index = getTransformationIndex(
+            field.slug,
+            individualMapping.transformations
+          )
+          if (index > -1) {
+            transformations.push(individualMapping.transformations[index])
+          }
+        }
+      }
+
+      const eventActions: ObjectMapping['event_actions'] = []
+      if (CRMObject.events) {
+        // Go through all events passed to CRM Link and include only their actions if they exist
+        for (const event of CRMObject.events) {
+          const index = individualMapping.event_actions.findIndex(
+            (eventAction) => eventAction.event.slug === event.slug
+          )
+          if (index > -1) {
+            const eventTransformations: Transformation[] = []
+            // Go through all event payload fields and include only their transformations if they exist
+            for (const payloadField of event.fields) {
+              const payloadMappingindex = getTransformationIndex(
+                payloadField.slug,
+                individualMapping.event_actions[index].transformations
+              )
+              if (payloadMappingindex > -1) {
+                eventTransformations.push(
+                  individualMapping.event_actions[index].transformations[
+                    payloadMappingindex
+                  ]
+                )
+              }
+            }
+            // Go through all event transformations and include those that are static
+            for (const eventTransformation of individualMapping.event_actions[
+              index
+            ].transformations) {
+              if (eventTransformation.name === 'static') {
+                eventTransformations.push(eventTransformation)
+              }
+            }
+            eventActions.push({
+              ...individualMapping.event_actions[index],
+              transformations: eventTransformations
+            })
+          }
+        }
+      }
+      essentialMapping.push({
+        ...individualMapping,
+        transformations,
+        event_actions: eventActions
+      })
+    }
+  }
+
+  return essentialMapping
+}

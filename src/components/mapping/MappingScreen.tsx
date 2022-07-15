@@ -10,6 +10,7 @@ import {
   listCRMObjects,
   mergePreviouslyMappedNestedFields,
   removeMapping,
+  stripUnneededMappings,
   updateMapping
 } from '../../functions/mapping'
 import {
@@ -88,7 +89,12 @@ const MappingScreen: FC<MappingScreenProps> = ({
             setUserObjects(APIObjects)
             setCurrentDeveloperObjectIndex(0)
             setCurrentUserObjectIndex(0)
-            setObjectMappings(getMappingResponse.mapping)
+            setObjectMappings(
+              stripUnneededMappings(
+                updatedCRMObjects,
+                getMappingResponse.mapping
+              )
+            )
             setCurrentStage(MappingStages.Configuration)
           }
         }
@@ -475,16 +481,8 @@ const MappingScreen: FC<MappingScreenProps> = ({
                         ) => {
                           const transformation: Transformation = {
                             field: { slug: payloadField.slug },
-                            name: type
-                          }
-                          switch (type) {
-                            case 'static':
-                              transformation.static_value = value
-                              break
-                            case 'direct':
-                            default:
-                              transformation.source_pointer = value
-                              break
+                            name: type,
+                            source_pointer: value
                           }
 
                           modifyEventTransformations((transformations) => {

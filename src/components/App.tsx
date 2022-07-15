@@ -33,21 +33,24 @@ const App: FC<AppProps> = ({
     Connection | undefined
   >(undefined)
 
-  const connect = async (connector: Connector) => {
-    if (xkit && xkit.domain) {
-      try {
-        setCurrentConnector(connector)
-        setScreen(Screen.Connecting)
-        const connection = await xkit.addConnection(connector.slug)
-        setCurrentConnection(connection)
-        setScreen(Screen.Mapping)
-      } catch (error) {
-        return reject(friendlyMessage(error.message))
+  const connect = useCallback(
+    async (connector: Connector) => {
+      if (xkit && xkit.domain) {
+        try {
+          setCurrentConnector(connector)
+          setScreen(Screen.Connecting)
+          const connection = await xkit.addConnection(connector.slug)
+          setCurrentConnection(connection)
+          setScreen(Screen.Mapping)
+        } catch (error) {
+          return reject(friendlyMessage(error.message))
+        }
+      } else {
+        return reject('Could not identify session.')
       }
-    } else {
-      return reject('Could not identify session.')
-    }
-  }
+    },
+    [xkit, reject]
+  )
 
   const disconnect = async (connection: Connection) => {
     if (xkit && xkit.domain) {
@@ -122,12 +125,18 @@ const App: FC<AppProps> = ({
       const CRMs = connectors.filter((connector) => connector.crm)
       if (CRMs.length) {
         setConnectors(CRMs)
+        if (mapping.preselectCRMSlug) {
+          const CRM = CRMs.find((CRM) => CRM.slug === mapping.preselectCRMSlug)
+          if (CRM) {
+            return await connect(CRM)
+          }
+        }
         setScreen(Screen.Select)
       } else {
         return reject('There are no CRMs available.')
       }
     },
-    [reject, mapping]
+    [reject, mapping, connect]
   )
 
   useEffect(() => {
