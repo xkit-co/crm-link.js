@@ -1,6 +1,9 @@
 import { Connection } from '@xkit-co/xkit.js'
 import React, { FC, useState } from 'react'
 import Button from '../Button'
+import Rotate from '../icons/Rotate'
+import Trash from '../icons/Trash'
+import Pill from '../Pill'
 import XkitBranding from '../XkitBranding'
 
 interface MapConnectionProps {
@@ -26,39 +29,62 @@ const MapConnection: FC<MapConnectionProps> = ({
 
   return (
     <div className='flex flex-col h-[calc(100%-40px)]'>
-      <div className='text-sm pt-2.5 pb-4 px-6'>
-        {connection.connector.name}{' '}
-        {isActive
-          ? 'connection is active'
-          : 'connection is not active and a reconnection might be required'}
-      </div>
       <div className='pb-2.5 flex flex-col grow overflow-y-auto'>
         <div className='grow'>
-          <div className='px-6 py-3 pb-4'>
-            <Button
-              text='Reconnect'
-              type={disabled ? 'disabled' : 'primary'}
-              onClick={async () => {
-                if (!disabled) {
-                  setDisabled(true)
-                  await reconnect(connection)
-                  setDisabled(false)
-                }
-              }}
+          <div className='w-24 h-24 py-2.5 mx-auto'>
+            <img
+              className='block w-full'
+              src={connection.connector.mark_url}
+              alt={connection.connector.name}
             />
           </div>
+          <div className='px-6 py-2.5 flex items-center justify-between'>
+            <div className='break-words'>{connection.connector.name}</div>
+            {isActive ? (
+              <Pill color='green' text='active' className='ml-3' />
+            ) : (
+              <Pill color='orange' text='error' className='ml-3' />
+            )}
+          </div>
+          <div className='text-xs py-2.5 px-6 text-neutral-500'>
+            {connection.connector.short_description}
+          </div>
           <div className='px-6 py-3 pb-4'>
-            <Button
-              text='Disconnect'
-              type={disabled ? 'disabled' : 'primary'}
-              onClick={async () => {
-                if (!disabled) {
-                  setDisabled(true)
-                  await disconnect(connection)
-                  setDisabled(false)
+            {isActive ? (
+              <Button
+                text={
+                  <div className='flex items-center justify-center w-full'>
+                    <Trash className='h-4 w-4 pr-3 shrink-0' />
+                    Disconnect
+                  </div>
                 }
-              }}
-            />
+                type='secondary'
+                onClick={async () => {
+                  if (!disabled) {
+                    setDisabled(true)
+                    await disconnect(connection)
+                    setDisabled(false)
+                  }
+                }}
+              />
+            ) : (
+              <Button
+                text={
+                  <div className='flex items-center justify-center w-full'>
+                    <Rotate className='h-4 w-4 pr-3 shrink-0' />
+                    Reconnect
+                  </div>
+                }
+                type='secondary'
+                onClick={async () => {
+                  if (!disabled) {
+                    setDisabled(true)
+                    await reconnect(connection)
+                    setDisabled(false)
+                  }
+                }}
+              />
+            )}
           </div>
         </div>
         <div className='px-6 pt-6 pb-4'>
