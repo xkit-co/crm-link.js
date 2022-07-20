@@ -1,6 +1,6 @@
 {
   "name": "@xkit-co/crm-link.js",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "description": "CRM integrations on your application via XKit",
   "repository": {
     "type": "git",
@@ -72,6 +72,6 @@
     "react-dom": "16.9.0 - 18"
   },
   "dependencies": {
-    "@xkit-co/xkit.js": "^3.14.0"
+    "@xkit-co/xkit.js": "^3.14.1"
   }
 }

@@ -15,6 +15,7 @@ export enum MappingStages {
 }
 
 export interface CRMObjectField {
+  id?: number
   slug: string
   label: string
   description: string
@@ -26,6 +27,7 @@ export interface CRMObjectField {
 }
 
 export interface CRMObjectEvent {
+  id?: number
   slug: string
   type: string
   label: string

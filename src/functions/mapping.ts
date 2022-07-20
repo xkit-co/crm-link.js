@@ -273,6 +273,7 @@ export const mergePreviouslyMappedNestedFields = (
 
 export const listCRMObjects = async (
   xkit: XkitJs | undefined,
+  connection: Connection,
   mapping: Mapping,
   reject: (message: string) => void
 ) => {
@@ -281,7 +282,7 @@ export const listCRMObjects = async (
       return []
     }
     try {
-      const response = (await xkit.listCRMObjects({
+      const response = (await xkit.listCRMObjects(connection, {
         objects: mapping.objects
       })) as {
         errors?: { error: string; path: string }[]
@@ -396,7 +397,7 @@ export const stripUnneededMappings = (
             field.slug,
             individualMapping.transformations
           )
-          if (index > -1) {
+          if (field.id && index > -1) {
             transformations.push(individualMapping.transformations[index])
           }
         }
@@ -409,7 +410,7 @@ export const stripUnneededMappings = (
           const index = individualMapping.event_actions.findIndex(
             (eventAction) => eventAction.event.slug === event.slug
           )
-          if (index > -1) {
+          if (event.id && index > -1) {
             const eventTransformations: Transformation[] = []
             // Go through all event payload fields and include only their transformations if they exist
             for (const payloadField of event.fields) {
@@ -417,7 +418,7 @@ export const stripUnneededMappings = (
                 payloadField.slug,
                 individualMapping.event_actions[index].transformations
               )
-              if (payloadMappingindex > -1) {
+              if (payloadField.id && payloadMappingindex > -1) {
                 eventTransformations.push(
                   individualMapping.event_actions[index].transformations[
                     payloadMappingindex

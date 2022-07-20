@@ -75,7 +75,7 @@ const MappingScreen: FC<MappingScreenProps> = ({
 
   useEffect(() => {
     const loadObjects = async () => {
-      const CRMObjects = await listCRMObjects(xkit, mapping, reject)
+      const CRMObjects = await listCRMObjects(xkit, connection, mapping, reject)
       if (CRMObjects) {
         const APIObjects = await listAPIObjects(xkit, connection, reject)
         if (APIObjects) {
