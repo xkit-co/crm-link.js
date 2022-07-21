@@ -1,7 +1,7 @@
 import { Connection, Connector, Platform, XkitJs } from '@xkit-co/xkit.js'
 import React, { FC, useCallback, useEffect, useState } from 'react'
+import { Mapping } from '..'
 import { friendlyMessage } from '../functions/errors'
-import { Mapping } from '../interfaces/mapping.interface'
 import { Screen } from '../interfaces/screen.interface'
 import Cross from './icons/Cross'
 import ModalScreens from './ModalScreens'
@@ -124,19 +124,22 @@ const App: FC<AppProps> = ({
 
       const CRMs = connectors.filter((connector) => connector.crm)
       if (CRMs.length) {
-        setConnectors(CRMs)
         if (mapping.preselectCRMSlug) {
           const CRM = CRMs.find((CRM) => CRM.slug === mapping.preselectCRMSlug)
           if (CRM) {
-            return await connect(CRM)
+            setConnectors(CRMs)
+            setCurrentConnector(CRM)
+            setScreen(Screen.Preselect)
+            return
           }
         }
+        setConnectors(CRMs)
         setScreen(Screen.Select)
       } else {
         return reject('There are no CRMs available.')
       }
     },
-    [reject, mapping, connect]
+    [reject, mapping]
   )
 
   useEffect(() => {

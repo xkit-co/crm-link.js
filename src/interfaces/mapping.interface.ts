@@ -1,9 +1,3 @@
-export interface Mapping {
-  objects?: unknown
-  connectionID?: string
-  preselectCRMSlug?: string
-}
-
 export enum MappingStages {
   Loading,
   Configuration,

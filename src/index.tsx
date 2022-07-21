@@ -3,7 +3,12 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import App from './components/App'
 import styles from './index.inline.css'
-import { Mapping } from './interfaces/mapping.interface'
+
+export interface Mapping {
+  objects?: unknown
+  connectionID?: string
+  preselectCRMSlug?: string
+}
 
 const scope = document.body
   .appendChild(document.createElement('div'))

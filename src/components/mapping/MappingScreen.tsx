@@ -1,5 +1,6 @@
 import { Connection, XkitJs } from '@xkit-co/xkit.js'
 import React, { FC, useEffect, useState } from 'react'
+import { Mapping } from '../..'
 import {
   getAPIObject,
   getMapping,
@@ -16,7 +17,6 @@ import {
 import {
   APIObject,
   CRMObject,
-  Mapping,
   MappingStages,
   ObjectMapping,
   Transformation

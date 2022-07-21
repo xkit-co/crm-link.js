@@ -1,13 +1,13 @@
 import { Connection, XkitJs } from '@xkit-co/xkit.js'
 import { IKitAPIError } from '@xkit-co/xkit.js/lib/api/request'
 import React from 'react'
+import { Mapping } from '..'
 import { Option } from '../components/ComboBox'
 import {
   APIObject,
   CRMObject,
   CRMObjectField,
   InputType,
-  Mapping,
   ObjectMapping,
   Selector,
   Transformation

@@ -1,7 +1,8 @@
 import { Connection, Connector, XkitJs } from '@xkit-co/xkit.js'
 import React, { FC } from 'react'
-import { Mapping } from '../interfaces/mapping.interface'
+import { Mapping } from '..'
 import { Screen } from '../interfaces/screen.interface'
+import Button from './Button'
 import CRMConnector from './CRMConnector'
 import Spinner from './icons/Spinner'
 import MappingScreen from './mapping/MappingScreen'
@@ -81,6 +82,35 @@ const ModalScreens: FC<ModalScreensProps> = ({
           ))}
         </ModalLayout>
       )
+    case Screen.Preselect:
+      return currentConnector ? (
+        <>
+          <div className='flex flex-col justify-center items-center w-full h-[calc(100%-80px)]'>
+            <div className='w-24 h-24'>
+              <img
+                className='block w-full'
+                src={currentConnector.mark_url}
+                alt={currentConnector.name}
+              />
+            </div>
+            <div className='px-6 py-3 break-words'>{currentConnector.name}</div>
+            <div className='px-6 w-full box-border'>
+              <Button
+                text='Connect'
+                type='secondary'
+                onClick={() => {
+                  connect(currentConnector)
+                }}
+              />
+            </div>
+          </div>
+          {removeBranding ? null : (
+            <div className='w-full absolute bottom-0 left-0 py-2.5'>
+              <XkitBranding />
+            </div>
+          )}
+        </>
+      ) : null
     case Screen.Connecting:
       return currentConnector ? (
         <>
