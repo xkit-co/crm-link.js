@@ -10,7 +10,11 @@ export interface Mapping {
   preselectCRMSlug?: string
 }
 
-const scope = document.body
+const scopeID = 'xkit-crm-link-scope' // Should be hopefully unique enough
+
+const scopeDiv = document.createElement('div')
+scopeDiv.setAttribute('id', scopeID)
+const scope = scopeDiv
   .appendChild(document.createElement('div'))
   .attachShadow({ mode: 'open' })
 
@@ -28,7 +32,13 @@ appFonts.setAttribute(
   'href',
   'https://fonts.googleapis.com/css2?family=Inter:wght@500&display=swap'
 )
-document.head.appendChild(appFonts)
+
+const mountScope = () => {
+  if (!document.querySelector(`#${scopeID}`)) {
+    document.body.appendChild(scopeDiv)
+    document.head.appendChild(appFonts)
+  }
+}
 
 const renderApp = (
   visible: boolean,
@@ -67,6 +77,7 @@ const linkCRM = (
   token: string,
   mapping: Mapping
 ): Promise<string> => {
+  mountScope()
   const xkit = createXkit(domain)
   return new Promise((resolve, reject) => {
     if (token) {

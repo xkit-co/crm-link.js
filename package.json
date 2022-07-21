@@ -1,6 +1,6 @@
 {
   "name": "@xkit-co/crm-link.js",
-  "version": "2.3.3",
+  "version": "2.3.4",
   "description": "CRM integrations on your application via XKit",
   "repository": {
     "type": "git",
@@ -45,14 +45,16 @@
     "format-check": "prettier \"src/**/*.{js,jsx,ts,tsx}\" --check"
   },
   "devDependencies": {
-    "@parcel/config-default": "^2.5.0",
-    "@parcel/packager-ts": "2.5.0",
-    "@parcel/reporter-bundle-analyzer": "^2.5.0",
-    "@parcel/transformer-typescript-types": "2.5.0",
+    "@babel/core": "^7.18.9",
+    "@parcel/config-default": "^2.6.2",
+    "@parcel/packager-ts": "2.6.2",
+    "@parcel/reporter-bundle-analyzer": "^2.6.2",
+    "@parcel/transformer-typescript-types": "2.6.2",
     "@types/react": "^18.0.8",
     "@types/react-dom": "^18.0.3",
     "@typescript-eslint/eslint-plugin": "^5.22.0",
     "@typescript-eslint/parser": "^5.22.0",
+    "babel-plugin-transform-async-to-promises": "^0.8.18",
     "chokidar-cli": "^3.0.0",
     "eslint": "^8.14.0",
     "eslint-config-prettier": "^8.5.0",
@@ -60,7 +62,7 @@
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-react": "^7.28.0",
     "eslint-plugin-react-hooks": "^4.3.0",
-    "parcel": "^2.5.0",
+    "parcel": "^2.6.2",
     "parcel-transformer-css-to-string": "^0.9.1",
     "postcss": "^8.4.13",
     "prettier": "^2.6.2",
