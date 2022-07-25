@@ -21,7 +21,7 @@ const Pill: FC<PillProps> = ({ className, color, text }) => {
   return (
     <div
       className={[
-        className ?? '',
+        className || '',
         'px-1.5',
         'uppercase',
         'text-xs',

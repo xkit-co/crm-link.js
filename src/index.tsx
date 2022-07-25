@@ -12,29 +12,31 @@ export interface Mapping {
 
 const scopeID = 'xkit-crm-link-scope' // Should be hopefully unique enough
 
-const scopeDiv = document.createElement('div')
-scopeDiv.setAttribute('id', scopeID)
-const scope = scopeDiv
-  .appendChild(document.createElement('div'))
-  .attachShadow({ mode: 'open' })
+let appContainer: HTMLDivElement | undefined = undefined
 
-const appContainer = document.createElement('div')
-appContainer.classList.add('xkit-root')
-scope.appendChild(appContainer)
+const prepareDOM = () => {
+  if (typeof window !== 'undefined' && !document.querySelector(`#${scopeID}`)) {
+    const scopeDiv = document.createElement('div')
+    scopeDiv.setAttribute('id', scopeID)
+    const scope = scopeDiv
+      .appendChild(document.createElement('div'))
+      .attachShadow({ mode: 'open' })
 
-const appStyles = document.createElement('style')
-appStyles.innerHTML = styles
-scope.appendChild(appStyles)
+    appContainer = document.createElement('div')
+    appContainer.classList.add('xkit-root')
+    scope.appendChild(appContainer)
 
-const appFonts = document.createElement('link')
-appFonts.setAttribute('rel', 'stylesheet')
-appFonts.setAttribute(
-  'href',
-  'https://fonts.googleapis.com/css2?family=Inter:wght@500&display=swap'
-)
+    const appStyles = document.createElement('style')
+    appStyles.innerHTML = styles
+    scope.appendChild(appStyles)
 
-const mountScope = () => {
-  if (!document.querySelector(`#${scopeID}`)) {
+    const appFonts = document.createElement('link')
+    appFonts.setAttribute('rel', 'stylesheet')
+    appFonts.setAttribute(
+      'href',
+      'https://fonts.googleapis.com/css2?family=Inter:wght@500&display=swap'
+    )
+
     document.body.appendChild(scopeDiv)
     document.head.appendChild(appFonts)
   }
@@ -48,17 +50,19 @@ const renderApp = (
   resolve: (connection: Connection) => void,
   reject: (message: string) => void
 ): void => {
-  ReactDOM.render(
-    <App
-      visible={visible}
-      token={token}
-      mapping={mapping}
-      xkit={xkit}
-      resolve={resolve}
-      reject={reject}
-    />,
-    appContainer
-  )
+  if (appContainer) {
+    ReactDOM.render(
+      <App
+        visible={visible}
+        token={token}
+        mapping={mapping}
+        xkit={xkit}
+        resolve={resolve}
+        reject={reject}
+      />,
+      appContainer
+    )
+  }
 }
 
 const hideModal = () => {
@@ -77,7 +81,7 @@ const linkCRM = (
   token: string,
   mapping: Mapping
 ): Promise<string> => {
-  mountScope()
+  prepareDOM()
   const xkit = createXkit(domain)
   return new Promise((resolve, reject) => {
     if (token) {
