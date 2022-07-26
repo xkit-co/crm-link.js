@@ -4,6 +4,16 @@
 
 [Refer to documentation](https://xkit.co/docs/crm-link#install-crm-linkjs)
 
+## Debugging
+
+Under some very specific circumstances, you might run into issues with using this library. Some of these are known and are listed below:
+
+- This library renders DOM elements at `z-index` values of `999` and `1000`. You might notice an issue if the `z-index` values in your application are the same or higher.
+- This library uses the available height of the document window to determine where to render dropdown menus. If for some reason, the height of your application's `html` or `body` element is less than the viewport height, you might notice an issue.
+- This library when consumed as a node package is built for ES5 and above. Make sure your build tool or bundler is up to date.
+- When using the browser script, ensure `window.linkCRM` is not re-assigned.
+- Ensure that no DOM elements in your application have an `id` attribute of `xkit-crm-link-scope`.
+
 ## API
 
 `linkCRM()`
@@ -17,11 +27,3 @@
 | Return Type       | Description                                                                |
 | ----------------- | -------------------------------------------------------------------------- |
 | `Promise<string>` | A promise that either resolves to a connection ID or rejects with an error |
-
-## Development
-
-Run `npm run dev`. This will:
-
-1. Build `dist/index.js` which can be imported into a React application.
-2. Build `dist/browser.js` which can be injected as a script tag.
-3. Watch for changes and rebuild the above when you edit and save the source code.

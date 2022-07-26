@@ -1,6 +1,6 @@
 {
   "name": "@xkit-co/crm-link.js",
-  "version": "2.3.5",
+  "version": "2.3.6",
   "description": "CRM integrations on your application via XKit",
   "repository": {
     "type": "git",
@@ -35,11 +35,13 @@
   ],
   "scripts": {
     "watch-testapp": "chokidar \"src/**/*.tsx\" \"src/**/*.ts\" \"src/**/*.css\" --silent --initial -c \"rm -rf ../../../testapp/priv/static/js/crm-link && parcel build --no-cache src/browser.ts --target testapp\"",
-    "dev": "chokidar \"src/**/*.tsx\" \"src/**/*.ts\" \"src/**/*.css\" --silent --initial -c \"rm -rf dist && parcel build --no-cache src/index.tsx --target lib && parcel build --no-cache src/browser.ts --target static\"",
-    "build": "rm -rf dist && tsc --noEmit && parcel build --no-cache src/index.tsx --reporter @parcel/reporter-bundle-analyzer --target lib && parcel build --no-cache src/browser.ts --reporter @parcel/reporter-bundle-analyzer --target static",
-    "types": "tsc --emitDeclarationOnly --declaration --outDir temp && mv temp/index.d.ts dist/index.d.ts && rm -rf temp",
+    "build-lib": "tsc --outDir dist",
+    "build-lib-styles": "parcel build --no-cache src/index.inline.css --target lib && mv dist/index.inline.js dist/index.inline.css.js",
+    "build-browser": "parcel build --no-cache src/browser.ts --reporter @parcel/reporter-bundle-analyzer --target static",
+    "build-types": "tsc --emitDeclarationOnly --declaration --outDir temp && mv temp/index.d.ts dist/index.d.ts && rm -rf temp",
+    "build": "rm -rf dist && npm run build-lib && npm run build-lib-styles && npm run build-browser && npm run build-types",
     "test": "tsc --noEmit",
-    "prepublishOnly": "npm run build && npm run types",
+    "prepublishOnly": "npm run build",
     "repo": "echo https://github.com/xkit-co/crm-link.js.git",
     "lint": "eslint . --ext js,jsx,ts,tsx",
     "format-check": "prettier \"src/**/*.{js,jsx,ts,tsx}\" --check"
@@ -54,7 +56,6 @@
     "@types/react-dom": "^18.0.3",
     "@typescript-eslint/eslint-plugin": "^5.22.0",
     "@typescript-eslint/parser": "^5.22.0",
-    "babel-plugin-transform-async-to-promises": "^0.8.18",
     "chokidar-cli": "^3.0.0",
     "eslint": "^8.14.0",
     "eslint-config-prettier": "^8.5.0",

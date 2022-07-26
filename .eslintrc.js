@@ -24,8 +24,7 @@ module.exports = {
   rules: {
     // It doesn't work well with Typescript https://github.com/yannickcr/eslint-plugin-react/issues/2353
     'react/prop-types': 'off',
-    '@typescript-eslint/no-non-null-assertion': 'off',
-    'no-restricted-syntax': ['error', "LogicalExpression[operator='??']"]
+    '@typescript-eslint/no-non-null-assertion': 'off'
   },
   settings: {
     react: {
