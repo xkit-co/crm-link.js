@@ -4,6 +4,10 @@
 
 [Refer to documentation](https://xkit.co/docs/crm-link#install-crm-linkjs)
 
+## Changelog
+
+[View Changelog](CHANGELOG.md)
+
 ## Debugging
 
 Under some very specific circumstances, you might run into issues with using this library. Some of these are known and are listed below:

@@ -8,6 +8,34 @@ import Caret from './icons/Caret'
 import Minus from './icons/Minus'
 import Plus from './icons/Plus'
 import Cross from './icons/Cross'
+import { scopeID } from '..'
+
+const focusableClass = 'xkit-combobox-focusable'
+
+const focusNext = (element: HTMLInputElement | HTMLDivElement, up: boolean) => {
+  const XkitDocument = document.getElementById(scopeID)?.children[0].shadowRoot
+  if (XkitDocument) {
+    const focusableElements: HTMLElement[] = Array.from(
+      XkitDocument.querySelectorAll(`.${focusableClass}`)
+    )
+    if (focusableElements.length > 1) {
+      const currentElementIndex = focusableElements.findIndex(
+        (focusableElement) => focusableElement === element
+      )
+      if (currentElementIndex > -1) {
+        if (up) {
+          if (currentElementIndex !== 0) {
+            focusableElements[currentElementIndex - 1].focus()
+          }
+        } else {
+          if (currentElementIndex !== focusableElements.length - 1) {
+            focusableElements[currentElementIndex + 1].focus()
+          }
+        }
+      }
+    }
+  }
+}
 
 export interface Option {
   label: string
@@ -169,7 +197,20 @@ const ComboBox: FC<ComboBoxProps> = ({
           <div className='min-w-fit'>
             {allowFiltering ? (
               <input
-                className='box-border p-2 block w-full outline-none border-none text-sm bg-white placeholder:text-neutral-500'
+                className={[
+                  'box-border',
+                  'p-2',
+                  'block',
+                  'w-full',
+                  'outline-none',
+                  'border-none',
+                  'text-sm',
+                  'bg-white',
+                  'placeholder:text-neutral-500',
+                  focusableClass
+                ]
+                  .join(' ')
+                  .trim()}
                 placeholder={
                   options.length
                     ? 'Type to filter or enter static data'
@@ -178,7 +219,14 @@ const ComboBox: FC<ComboBoxProps> = ({
                 type='text'
                 value={searchFieldText}
                 onChange={(event) => {
-                  setSearchFieldText(event.target.value.trim())
+                  setSearchFieldText(event.target.value)
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'ArrowDown') {
+                    event.preventDefault()
+                    event.stopPropagation()
+                    focusNext(event.currentTarget, false)
+                  }
                 }}
                 ref={searchFieldRef}
               />
@@ -275,6 +323,30 @@ const OptionItem: FC<OptionItemProps> = ({
     }
   }
 
+  const handleSelect = () => {
+    if (!disabled) {
+      if (getSelectableCriteria) {
+        const criteria = getSelectableCriteria(option)
+        if (criteria && criteria.transformations) {
+          const intersectionTransformations = supportedTransformations.filter(
+            (transformation) =>
+              criteria.transformations.includes(transformation)
+          )
+          if (
+            intersectionTransformations.length === 1 &&
+            intersectionTransformations[0] === 'date'
+          ) {
+            onSelect(option.value, 'date')
+            close()
+            return
+          }
+        }
+      }
+      onSelect(option.value, 'direct')
+      close()
+    }
+  }
+
   return (
     <>
       <div
@@ -283,32 +355,33 @@ const OptionItem: FC<OptionItemProps> = ({
           'text-sm',
           'flex',
           'items-center',
-          disabled ? '' : 'hover:bg-black/5 cursor-pointer',
+          'rounded',
+          'focus:outline',
+          'focus:outline-2',
+          'outline-offset-[-2px]',
+          'outline-sky-500',
+          disabled ? '' : `${focusableClass} hover:bg-black/5 cursor-pointer`,
           option.value === selected ? 'bg-black/10' : ''
         ]
           .join(' ')
           .trim()}
-        onClick={() => {
+        tabIndex={disabled ? undefined : 0}
+        onClick={handleSelect}
+        onKeyDown={(event) => {
           if (!disabled) {
-            if (getSelectableCriteria) {
-              const criteria = getSelectableCriteria(option)
-              if (criteria && criteria.transformations) {
-                const intersectionTransformations =
-                  supportedTransformations.filter((transformation) =>
-                    criteria.transformations.includes(transformation)
-                  )
-                if (
-                  intersectionTransformations.length === 1 &&
-                  intersectionTransformations[0] === 'date'
-                ) {
-                  onSelect(option.value, 'date')
-                  close()
-                  return
-                }
-              }
+            if (event.key === 'ArrowUp') {
+              event.preventDefault()
+              event.stopPropagation()
+              focusNext(event.currentTarget, true)
+            } else if (event.key === 'ArrowDown') {
+              event.preventDefault()
+              event.stopPropagation()
+              focusNext(event.currentTarget, false)
+            } else if (event.key === ' ' || event.key === 'Enter') {
+              event.preventDefault()
+              event.stopPropagation()
+              handleSelect()
             }
-            onSelect(option.value, 'direct')
-            close()
           }
         }}
       >

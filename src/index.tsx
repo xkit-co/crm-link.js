@@ -10,7 +10,7 @@ export interface Mapping {
   preselectCRMSlug?: string
 }
 
-const scopeID = 'xkit-crm-link-scope' // Should be hopefully unique enough
+export const scopeID = 'xkit-crm-link-scope' // Should be hopefully unique enough
 
 let appContainer: HTMLDivElement | undefined = undefined
 
