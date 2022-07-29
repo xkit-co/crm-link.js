@@ -1,8 +1,11 @@
+import { Connector } from '@xkit-co/xkit.js'
 import React, { FC, useState } from 'react'
 import {
-  isAllEventsSelected,
-  isAllFieldsSelected,
-  isObjectSelected
+  isObjectSelected,
+  isReadAvailable,
+  isReadSelected,
+  isWriteAvailable,
+  isWriteSelected
 } from '../../functions/mapping'
 import {
   APIObject,
@@ -11,6 +14,7 @@ import {
   ObjectMapping
 } from '../../interfaces/mapping.interface'
 import Button from '../Button'
+import Arrow from '../icons/Arrow'
 import Spinner from '../icons/Spinner'
 import Tick from '../icons/Tick'
 import Trash from '../icons/Trash'
@@ -21,6 +25,8 @@ interface MapObjectViewProps {
   developerObject: CRMObject
   userObjects: APIObject[]
   objectMappings: ObjectMapping[]
+  platformName: string
+  connector: Connector
   onRemoveMapping: (
     objectMapping: ObjectMapping,
     displayedObjectMappings: ObjectMapping[]
@@ -38,6 +44,8 @@ const MapObjectView: FC<MapObjectViewProps> = ({
   developerObject,
   userObjects,
   objectMappings,
+  platformName,
+  connector,
   onRemoveMapping,
   onSelectMapping,
   onDone,
@@ -114,7 +122,7 @@ const MapObjectView: FC<MapObjectViewProps> = ({
                         />
                       )}
                     </div>
-                    {developerObject.fields && developerObject.fields.length ? (
+                    {isReadAvailable(developerObject) ? (
                       <div
                         className={[
                           'pl-9',
@@ -129,7 +137,9 @@ const MapObjectView: FC<MapObjectViewProps> = ({
                           'border-solid',
                           'border-neutral-100',
                           loading ? '' : 'hover:bg-black/5 cursor-pointer',
-                          developerObject.events ? 'border-b' : 'border-b-0'
+                          isWriteAvailable(developerObject)
+                            ? 'border-b'
+                            : 'border-b-0'
                         ]
                           .join(' ')
                           .trim()}
@@ -139,24 +149,31 @@ const MapObjectView: FC<MapObjectViewProps> = ({
                             await onSelectMapping(
                               userObjectIndex,
                               objectMapping,
-                              MappingStages.Fields
+                              MappingStages.Read
                             )
                             setLoading(false)
                           }
                         }}
                       >
-                        <div className='text-sm break-words'>Read</div>
-                        {isAllFieldsSelected(
-                          developerObject,
-                          objectMapping.transformations
-                        ) ? (
+                        <div className='flex justify-start items-center'>
+                          <img
+                            src={connector.mark_url}
+                            alt={connector.name}
+                            className='h-4 w-4 shrink-0'
+                          />
+                          <Arrow className='h-4 w-4 px-3 fill-neutral-500 shrink-0' />
+                          <div className='text-sm break-words max-w-[216px]'>
+                            {platformName}
+                          </div>
+                        </div>
+                        {isReadSelected(developerObject, objectMapping) ? (
                           <Tick className='h-4 w-4 shrink-0 pl-3 fill-emerald-500' />
                         ) : (
                           <Warn className='h-4 w-4 shrink-0 pl-3 fill-yellow-500' />
                         )}
                       </div>
                     ) : null}
-                    {developerObject.events && developerObject.events.length ? (
+                    {isWriteAvailable(developerObject) ? (
                       <div
                         className={[
                           'pl-9',
@@ -175,17 +192,24 @@ const MapObjectView: FC<MapObjectViewProps> = ({
                             await onSelectMapping(
                               userObjectIndex,
                               objectMapping,
-                              MappingStages.Events
+                              MappingStages.Write
                             )
                             setLoading(false)
                           }
                         }}
                       >
-                        <div className='text-sm break-words'>Write</div>
-                        {isAllEventsSelected(
-                          developerObject,
-                          objectMapping.event_actions
-                        ) ? (
+                        <div className='flex justify-start items-center'>
+                          <img
+                            src={connector.mark_url}
+                            alt={connector.name}
+                            className='h-4 w-4 shrink-0'
+                          />
+                          <Arrow className='h-4 w-4 px-3 fill-neutral-500 shrink-0 rotate-180' />
+                          <div className='text-sm break-words max-w-[216px]'>
+                            {platformName}
+                          </div>
+                        </div>
+                        {isWriteSelected(developerObject, objectMapping) ? (
                           <Tick className='h-4 w-4 shrink-0 pl-3 fill-emerald-500' />
                         ) : (
                           <Warn className='h-4 w-4 shrink-0 pl-3 fill-yellow-500' />

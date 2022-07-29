@@ -21,6 +21,7 @@ interface ModalScreensProps {
   currentConnection: Connection | undefined
   resolve: (connection: Connection) => void
   reject: (message: string) => void
+  platformName: string
   removeBranding: boolean
 }
 
@@ -36,6 +37,7 @@ const ModalScreens: FC<ModalScreensProps> = ({
   currentConnection,
   resolve,
   reject,
+  platformName,
   removeBranding
 }) => {
   switch (screen) {
@@ -144,6 +146,7 @@ const ModalScreens: FC<ModalScreensProps> = ({
           reject={reject}
           reconnect={reconnect}
           disconnect={disconnect}
+          platformName={platformName}
           removeBranding={removeBranding}
         />
       ) : null

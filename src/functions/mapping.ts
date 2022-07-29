@@ -53,6 +53,35 @@ export const removeMapping = (
   }
 }
 
+export const isReadAvailable = (object: CRMObject) => {
+  // True if object has fields or search event
+  if (object.fields && object.fields.length) {
+    return true
+  }
+  if (
+    object.events &&
+    object.events.length &&
+    object.events.find((event) => event.type === 'search')
+  ) {
+    return true
+  }
+  return false
+}
+
+export const isWriteAvailable = (object: CRMObject) => {
+  // True if object has create or update event
+  if (
+    object.events &&
+    object.events.length &&
+    object.events.find(
+      (event) => event.type === 'create' || event.type === 'update'
+    )
+  ) {
+    return true
+  }
+  return false
+}
+
 export const getTransformationIndex = (
   fieldSlug: string,
   transformations: Transformation[]
@@ -87,7 +116,8 @@ export const isAllFieldsSelected = (
   return true
 }
 
-export const isAllEventsSelected = (
+export const isEventsByTypeSelected = (
+  type: string,
   developerObject: CRMObject,
   objectMappingEvents: ObjectMapping['event_actions']
 ) => {
@@ -95,40 +125,86 @@ export const isAllEventsSelected = (
     return true
   }
   for (const event of developerObject.events || []) {
-    const existingEventIndex = objectMappingEvents.findIndex(
-      (objectMappingEvent) => objectMappingEvent.event.slug === event.slug
-    )
-    if (
-      existingEventIndex > -1 &&
-      objectMappingEvents[existingEventIndex].action_type === 'update'
-    ) {
-      for (const transformation of objectMappingEvents[existingEventIndex]
-        .transformations) {
-        if (
-          !transformation.field &&
-          (!transformation.source_pointer || !transformation.static_value)
-        ) {
-          return false
+    if (type === 'all' || event.type === type) {
+      const existingEventIndex = objectMappingEvents.findIndex(
+        (objectMappingEvent) => objectMappingEvent.event.slug === event.slug
+      )
+      if (
+        existingEventIndex > -1 &&
+        objectMappingEvents[existingEventIndex].action_type === 'update'
+      ) {
+        for (const transformation of objectMappingEvents[existingEventIndex]
+          .transformations) {
+          if (
+            !transformation.field &&
+            (!transformation.source_pointer || !transformation.static_value)
+          ) {
+            return false
+          }
         }
-      }
-    } else if (
-      existingEventIndex > -1 &&
-      objectMappingEvents[existingEventIndex].action_type === 'search'
-    ) {
-      for (const transformation of objectMappingEvents[existingEventIndex]
-        .transformations) {
-        if (
-          !transformation.source_pointer ||
-          !transformation.criteria_operator ||
-          !(
-            (transformation.field && transformation.field.slug) ||
-            transformation.static_value
-          )
-        ) {
-          return false
+      } else if (
+        existingEventIndex > -1 &&
+        objectMappingEvents[existingEventIndex].action_type === 'search'
+      ) {
+        for (const transformation of objectMappingEvents[existingEventIndex]
+          .transformations) {
+          if (
+            !transformation.source_pointer ||
+            !transformation.criteria_operator ||
+            !(
+              (transformation.field && transformation.field.slug) ||
+              transformation.static_value
+            )
+          ) {
+            return false
+          }
         }
       }
     }
+  }
+  return true
+}
+
+export const isReadSelected = (
+  developerObject: CRMObject,
+  objectMapping: ObjectMapping
+) => {
+  if (!isAllFieldsSelected(developerObject, objectMapping.transformations)) {
+    return false
+  }
+  if (
+    !isEventsByTypeSelected(
+      'search',
+      developerObject,
+      objectMapping.event_actions
+    )
+  ) {
+    return false
+  }
+  return true
+}
+
+export const isWriteSelected = (
+  developerObject: CRMObject,
+  objectMapping: ObjectMapping
+) => {
+  if (
+    !isEventsByTypeSelected(
+      'update',
+      developerObject,
+      objectMapping.event_actions
+    )
+  ) {
+    return false
+  }
+  if (
+    !isEventsByTypeSelected(
+      'create',
+      developerObject,
+      objectMapping.event_actions
+    )
+  ) {
+    return false
   }
   return true
 }
@@ -144,7 +220,11 @@ export const isObjectSelected = (
       if (
         !(
           isAllFieldsSelected(developerObject, objectMapping.transformations) &&
-          isAllEventsSelected(developerObject, objectMapping.event_actions)
+          isEventsByTypeSelected(
+            'all',
+            developerObject,
+            objectMapping.event_actions
+          )
         )
       ) {
         return false
@@ -170,18 +250,20 @@ export const isAllObjectsSelected = (
 }
 
 export const selectorsToOptions = (selectors: Selector[]): Option[] => {
-  return selectors.map((selector) => {
-    const option: Option = {
-      label: selector.label,
-      subLabel: selector.type_label,
-      value: selector.pointer,
-      selector: selector
-    }
-    if (selector.children && selector.children.length) {
-      option.children = selectorsToOptions(selector.children)
-    }
-    return option
-  })
+  return selectors
+    .map((selector) => {
+      const option: Option = {
+        label: selector.label,
+        subLabel: selector.type_label,
+        value: selector.pointer,
+        selector: selector
+      }
+      if (selector.children && selector.children.length) {
+        option.children = selectorsToOptions(selector.children)
+      }
+      return option
+    })
+    .sort((optionA, optionB) => optionA.label.localeCompare(optionB.label))
 }
 
 export const supportedTransformations = ['direct', 'date']

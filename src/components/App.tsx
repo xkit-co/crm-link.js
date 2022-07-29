@@ -212,6 +212,7 @@ const App: FC<AppProps> = ({
             currentConnection={currentConnection}
             resolve={resolve}
             reject={reject}
+            platformName={platform ? platform.name : ''}
             removeBranding={platform ? platform.remove_branding : false}
           />
         </div>

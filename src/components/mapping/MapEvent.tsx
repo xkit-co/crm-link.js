@@ -334,10 +334,20 @@ const MapEvent: FC<MapEventProps> = ({
   let availableActions: Option[] = []
   switch (event.type) {
     case 'update':
-      availableActions = [{ label: 'Update existing records', value: 'update' }]
+      availableActions = [
+        {
+          label: `Update an existing ${currentUserObject.label_one}`,
+          value: 'update'
+        }
+      ]
       break
     case 'create':
-      availableActions = [{ label: 'Create a new record', value: 'create' }]
+      availableActions = [
+        {
+          label: `Create a new ${currentUserObject.label_one}`,
+          value: 'create'
+        }
+      ]
       break
     case 'search':
       availableActions = [{ label: 'Build search query', value: 'search' }]

@@ -1,3 +1,9 @@
+### 2.4.1
+
+- Reorganize UI for 'Read' and 'Write' mappings
+- Better labels for action handlers when creating or updating records
+- CRM fields in the dropdown are now sorted alphabetically at each level
+
 ## 2.4.0
 
 - Added ability to navigate Combobox entries via up and down arrow keys

@@ -4,8 +4,8 @@ export enum MappingStages {
   Connection,
   Mappings,
   Objects,
-  Fields,
-  Events
+  Read,
+  Write
 }
 
 export interface CRMObjectField {
