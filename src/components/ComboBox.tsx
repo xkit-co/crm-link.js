@@ -91,10 +91,12 @@ const ComboBox: FC<ComboBoxProps> = ({
          */
         if (
           desiredTopOffset + dropdownRef.current.offsetHeight >
-          document.body.clientHeight - 10
+          document.documentElement.clientHeight - 10
         ) {
           dropdownRef.current.style.top = `${
-            document.body.clientHeight - 10 - dropdownRef.current.offsetHeight
+            document.documentElement.clientHeight -
+            10 -
+            dropdownRef.current.offsetHeight
           }px`
         } else {
           dropdownRef.current.style.top = `${desiredTopOffset}px`

@@ -15,6 +15,7 @@ import {
 import CheckBox from '../CheckBox'
 import ComboBox from '../ComboBox'
 import Trash from '../icons/Trash'
+import Tooltip from '../Tooltip'
 import AddAdditionalProperty from './AddAdditionalProperty'
 
 interface MapFieldProps {
@@ -131,13 +132,15 @@ const MapField: FC<MapFieldProps> = ({
       <div className='flex items-center justify-between'>
         <div className='break-words w-[calc(100%-28px)]'>{field.label}</div>
         {field.parent_slug ? (
-          <Trash
-            className='h-4 w-4 pl-3 shrink-0 fill-red-500 cursor-pointer'
-            onClick={() => {
-              onFieldRemove(field.slug)
-              onRemoveAdditionalProperty(field.slug)
-            }}
-          />
+          <Tooltip text={`Remove field`}>
+            <Trash
+              className='h-4 w-4 pl-3 shrink-0 fill-red-500 cursor-pointer'
+              onClick={() => {
+                onFieldRemove(field.slug)
+                onRemoveAdditionalProperty(field.slug)
+              }}
+            />
+          </Tooltip>
         ) : null}
       </div>
       <div

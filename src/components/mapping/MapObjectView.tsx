@@ -19,6 +19,7 @@ import Spinner from '../icons/Spinner'
 import Tick from '../icons/Tick'
 import Trash from '../icons/Trash'
 import Warn from '../icons/Warn'
+import Tooltip from '../Tooltip'
 import XkitBranding from '../XkitBranding'
 
 interface MapObjectViewProps {
@@ -111,15 +112,17 @@ const MapObjectView: FC<MapObjectViewProps> = ({
                       {loading ? (
                         <Spinner className='h-4 w-4 shrink-0 pl-3' />
                       ) : (
-                        <Trash
-                          className='h-4 w-4 shrink-0 pl-3 fill-red-500 cursor-pointer'
-                          onClick={() => {
-                            onRemoveMapping(
-                              objectMapping,
-                              displayedObjectMappings
-                            )
-                          }}
-                        />
+                        <Tooltip text={`Remove mapping`}>
+                          <Trash
+                            className='h-4 w-4 shrink-0 pl-3 fill-red-500 cursor-pointer'
+                            onClick={() => {
+                              onRemoveMapping(
+                                objectMapping,
+                                displayedObjectMappings
+                              )
+                            }}
+                          />
+                        </Tooltip>
                       )}
                     </div>
                     {isReadAvailable(developerObject) ? (
@@ -155,21 +158,25 @@ const MapObjectView: FC<MapObjectViewProps> = ({
                           }
                         }}
                       >
-                        <div className='flex justify-start items-center'>
-                          <img
-                            src={connector.mark_url}
-                            alt={connector.name}
-                            className='h-4 w-4 shrink-0'
-                          />
-                          <Arrow className='h-4 w-4 px-3 fill-neutral-500 shrink-0' />
-                          <div className='text-sm break-words max-w-[216px]'>
-                            {platformName}
+                        <Tooltip text={`Read data`}>
+                          <div className='flex justify-start items-center'>
+                            <img
+                              src={connector.mark_url}
+                              alt={connector.name}
+                              className='h-4 w-4 shrink-0'
+                            />
+                            <Arrow className='h-4 w-4 px-3 fill-neutral-500 shrink-0' />
+                            <div className='text-sm break-words max-w-[216px]'>
+                              {platformName}
+                            </div>
                           </div>
-                        </div>
+                        </Tooltip>
                         {isReadSelected(developerObject, objectMapping) ? (
                           <Tick className='h-4 w-4 shrink-0 pl-3 fill-emerald-500' />
                         ) : (
-                          <Warn className='h-4 w-4 shrink-0 pl-3 fill-yellow-500' />
+                          <Tooltip text={`Mapping needs to be completed`}>
+                            <Warn className='h-4 w-4 shrink-0 pl-3 fill-yellow-500' />
+                          </Tooltip>
                         )}
                       </div>
                     ) : null}
@@ -198,21 +205,25 @@ const MapObjectView: FC<MapObjectViewProps> = ({
                           }
                         }}
                       >
-                        <div className='flex justify-start items-center'>
-                          <img
-                            src={connector.mark_url}
-                            alt={connector.name}
-                            className='h-4 w-4 shrink-0'
-                          />
-                          <Arrow className='h-4 w-4 px-3 fill-neutral-500 shrink-0 rotate-180' />
-                          <div className='text-sm break-words max-w-[216px]'>
-                            {platformName}
+                        <Tooltip text={`Write data`}>
+                          <div className='flex justify-start items-center'>
+                            <img
+                              src={connector.mark_url}
+                              alt={connector.name}
+                              className='h-4 w-4 shrink-0'
+                            />
+                            <Arrow className='h-4 w-4 px-3 fill-neutral-500 shrink-0 rotate-180' />
+                            <div className='text-sm break-words max-w-[216px]'>
+                              {platformName}
+                            </div>
                           </div>
-                        </div>
+                        </Tooltip>
                         {isWriteSelected(developerObject, objectMapping) ? (
                           <Tick className='h-4 w-4 shrink-0 pl-3 fill-emerald-500' />
                         ) : (
-                          <Warn className='h-4 w-4 shrink-0 pl-3 fill-yellow-500' />
+                          <Tooltip text={`Mapping needs to be completed`}>
+                            <Warn className='h-4 w-4 shrink-0 pl-3 fill-yellow-500' />
+                          </Tooltip>
                         )}
                       </div>
                     ) : null}
