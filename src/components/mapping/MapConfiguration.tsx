@@ -10,6 +10,7 @@ import Button from '../Button'
 import Spinner from '../icons/Spinner'
 import Tick from '../icons/Tick'
 import Warn from '../icons/Warn'
+import Tooltip from '../Tooltip'
 import XkitBranding from '../XkitBranding'
 
 interface MapConfigurationProps {
@@ -50,7 +51,9 @@ const MapConfiguration: FC<MapConfigurationProps> = ({
           connection.authorization.status !== 'error' ? (
             <Tick className='h-4 w-4 shrink-0 pl-3 fill-emerald-500' />
           ) : (
-            <Warn className='h-4 w-4 shrink-0 pl-3 fill-yellow-500' />
+            <Tooltip text={`Requires attention`}>
+              <Warn className='h-4 w-4 shrink-0 pl-3 fill-yellow-500' />
+            </Tooltip>
           )}
         </div>
       </div>
@@ -85,7 +88,9 @@ const MapConfiguration: FC<MapConfigurationProps> = ({
                 {isObjectSelected(developerObject, objectMappings) ? (
                   <Tick className='h-4 w-4 shrink-0 pl-3 fill-emerald-500' />
                 ) : (
-                  <Warn className='h-4 w-4 shrink-0 pl-3 fill-yellow-500' />
+                  <Tooltip text={`Mapping needs to be completed`}>
+                    <Warn className='h-4 w-4 shrink-0 pl-3 fill-yellow-500' />
+                  </Tooltip>
                 )}
               </div>
             </div>

@@ -14,6 +14,7 @@ import Accordion from '../Accordion'
 import Button from '../Button'
 import ComboBox, { Option } from '../ComboBox'
 import Trash from '../icons/Trash'
+import Tooltip from '../Tooltip'
 
 interface MapEventProps {
   event: CRMObjectEvent
@@ -193,12 +194,14 @@ const MapEvent: FC<MapEventProps> = ({
                   }}
                 />
               </div>
-              <Trash
-                className='h-4 w-4 shrink-0 fill-red-500 cursor-pointer'
-                onClick={() => {
-                  updateAction.removeUserDefinedField(index)
-                }}
-              />
+              <Tooltip text={`Remove field`}>
+                <Trash
+                  className='h-4 w-4 shrink-0 fill-red-500 cursor-pointer'
+                  onClick={() => {
+                    updateAction.removeUserDefinedField(index)
+                  }}
+                />
+              </Tooltip>
             </div>
           ))}
           <div className='py-2'>
@@ -309,12 +312,14 @@ const MapEvent: FC<MapEventProps> = ({
                     </div>
                   </div>
                 </div>
-                <Trash
-                  className='h-4 w-4 shrink-0 fill-red-500 cursor-pointer'
-                  onClick={() => {
-                    updateAction.removeUserDefinedField(index)
-                  }}
-                />
+                <Tooltip text={`Remove filter`}>
+                  <Trash
+                    className='h-4 w-4 shrink-0 fill-red-500 cursor-pointer'
+                    onClick={() => {
+                      updateAction.removeUserDefinedField(index)
+                    }}
+                  />
+                </Tooltip>
               </div>
             ))}
             <Button

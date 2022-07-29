@@ -1,3 +1,7 @@
+### 2.4.2
+
+- Add relevant tooltips within the UI
+
 ### 2.4.1
 
 - Reorganize UI for 'Read' and 'Write' mappings
