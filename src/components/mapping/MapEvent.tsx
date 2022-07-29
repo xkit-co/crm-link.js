@@ -312,7 +312,7 @@ const MapEvent: FC<MapEventProps> = ({
                     </div>
                   </div>
                 </div>
-                <Tooltip text={`Remove query`}>
+                <Tooltip text={`Remove filter`}>
                   <Trash
                     className='h-4 w-4 shrink-0 fill-red-500 cursor-pointer'
                     onClick={() => {

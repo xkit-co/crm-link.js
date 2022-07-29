@@ -158,7 +158,9 @@ const MapObjectView: FC<MapObjectViewProps> = ({
                           }
                         }}
                       >
-                        <Tooltip text={`Read data`}>
+                        <Tooltip
+                          text={`Configure how ${platformName} will access data`}
+                        >
                           <div className='flex justify-start items-center'>
                             <img
                               src={connector.mark_url}
@@ -205,7 +207,9 @@ const MapObjectView: FC<MapObjectViewProps> = ({
                           }
                         }}
                       >
-                        <Tooltip text={`Write data`}>
+                        <Tooltip
+                          text={`Configure how ${platformName} will create or update data`}
+                        >
                           <div className='flex justify-start items-center'>
                             <img
                               src={connector.mark_url}
