@@ -354,6 +354,18 @@ const MapEvent: FC<MapEventProps> = ({
         }
       ]
       break
+    case 'delete':
+      availableActions = [
+        {
+          label: `Update a linked ${currentUserObject.label_one}`,
+          value: 'update'
+        },
+        {
+          label: `Delete a linked ${currentUserObject.label_one}`,
+          value: 'delete'
+        }
+      ]
+      break
     case 'search':
       availableActions = [{ label: 'Build search query', value: 'search' }]
       break

@@ -208,7 +208,7 @@ const MapObjectView: FC<MapObjectViewProps> = ({
                         }}
                       >
                         <Tooltip
-                          text={`Configure how ${platformName} will create or update data`}
+                          text={`Configure how ${platformName} will create, update or delete data`}
                         >
                           <div className='flex justify-start items-center'>
                             <img
