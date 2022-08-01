@@ -74,7 +74,10 @@ export const isWriteAvailable = (object: CRMObject) => {
     object.events &&
     object.events.length &&
     object.events.find(
-      (event) => event.type === 'create' || event.type === 'update' || event.type === 'delete'
+      (event) =>
+        event.type === 'create' ||
+        event.type === 'update' ||
+        event.type === 'delete'
     )
   ) {
     return true

@@ -213,8 +213,8 @@ const MapWrite: FC<MapWriteProps> = ({
 }) => (
   <div className='flex flex-col h-[calc(100%-40px)]'>
     <div className='text-sm pt-2.5 pb-4 px-6'>
-      Configure how {currentUserObject.label_many} are created, updated or deleted by{' '}
-      {platformName}
+      Configure how {currentUserObject.label_many} are created, updated or
+      deleted by {platformName}
     </div>
     <div className='pb-2.5 flex flex-col grow overflow-y-auto'>
       <div className='grow'>
