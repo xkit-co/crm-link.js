@@ -3,9 +3,10 @@ import React, { FC, useEffect, useRef, useState } from 'react'
 interface TooltipProps {
   text: string
   children: React.ReactNode
+  className?: string
 }
 
-const Tooltip: FC<TooltipProps> = ({ text, children }) => {
+const Tooltip: FC<TooltipProps> = ({ text, children, className = '' }) => {
   const targetRef = useRef<HTMLDivElement>(null)
   const tooltipRef = useRef<HTMLDivElement>(null)
   const [isVisible, setIsVisible] = useState<boolean>(false)
@@ -29,7 +30,7 @@ const Tooltip: FC<TooltipProps> = ({ text, children }) => {
   return (
     <div
       ref={targetRef}
-      className='block group'
+      className={`block group ${className}`}
       onMouseEnter={() => {
         setIsVisible(true)
       }}

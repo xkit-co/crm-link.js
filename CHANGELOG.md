@@ -1,3 +1,8 @@
+## 2.6.0
+
+- Added suggested options while mapping
+- Added back button in the top left corner for relevant screens
+
 ## 2.5.0
 
 - Added ability to take actions for a `delete` event

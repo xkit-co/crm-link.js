@@ -261,7 +261,23 @@ export const isAllObjectsSelected = (
   return true
 }
 
-export const selectorsToOptions = (selectors: Selector[]): Option[] => {
+const doesOptionHaveMatch = (option: Option): boolean => {
+  if (option.match) {
+    return true
+  } else if (option.children) {
+    for (const childOption of option.children) {
+      if (doesOptionHaveMatch(childOption)) {
+        return true
+      }
+    }
+  }
+  return false
+}
+
+export const selectorsToOptions = (
+  selectors: Selector[],
+  field?: CRMObjectField
+): Option[] => {
   return selectors
     .map((selector) => {
       const option: Option = {
@@ -271,11 +287,29 @@ export const selectorsToOptions = (selectors: Selector[]): Option[] => {
         selector: selector
       }
       if (selector.children && selector.children.length) {
-        option.children = selectorsToOptions(selector.children)
+        option.children = selectorsToOptions(selector.children, field)
+      }
+      if (field) {
+        option.match =
+          isMatch(field.label, selector.label) &&
+          isSelectableCriteria(option, field)
       }
       return option
     })
-    .sort((optionA, optionB) => optionA.label.localeCompare(optionB.label))
+    .sort((optionA, optionB) => {
+      if (field) {
+        const optionAHasMatch = doesOptionHaveMatch(optionA)
+        const optionBHasMatch = doesOptionHaveMatch(optionB)
+        if (optionAHasMatch === optionBHasMatch) {
+          return optionA.label.localeCompare(optionB.label)
+        }
+        if (optionAHasMatch) {
+          return -1
+        }
+        return 1
+      }
+      return optionA.label.localeCompare(optionB.label)
+    })
 }
 
 export const supportedTransformations = ['direct', 'date']
@@ -314,7 +348,7 @@ export const isSelectableCriteria = (
 
 export const findSelectedOption = (
   options: Option[],
-  selected: string | undefined
+  selected?: string
 ): Option | undefined => {
   if (!selected) {
     return undefined
@@ -544,4 +578,61 @@ export const stripUnneededMappings = (
   }
 
   return essentialMapping
+}
+
+// These are aliases for suggested mappings. Each entry contains interchangeable aliases.
+const matchAssociations = [
+  ['account', 'company'],
+  ['contact', 'customer'],
+  ['lead', 'prospect'],
+  ['deal', 'opportunity'],
+  ['meeting', 'event']
+]
+
+export const isMatch = (search: string, text: string): boolean => {
+  // The logic here decides if an entry is a match for showing as a suggested mapping
+  const term = search.split(' ').join('').toLowerCase()
+  const option = text.split(' ').join('').toLowerCase()
+  // Check for a direct match
+  if (term === option) {
+    return true
+  }
+  // Check for associations
+  const associationsIndex = matchAssociations.findIndex((associations) =>
+    associations.includes(term)
+  )
+  if (associationsIndex > -1) {
+    for (const alias of matchAssociations[associationsIndex]) {
+      if (alias !== term && alias === option) {
+        return true
+      }
+    }
+  }
+  return false
+}
+
+export const defaultEventActions = (
+  object: CRMObject
+): ObjectMapping['event_actions'] => {
+  const actions: ObjectMapping['event_actions'] = []
+  if (object.events) {
+    for (const event of object.events) {
+      if (event.type === 'search' && event.fields && event.fields.length) {
+        actions.push({
+          event: {
+            slug: event.slug
+          },
+          action_type: 'search',
+          transformations: event.fields.map((field) => ({
+            name: 'direct',
+            criteria_operator: 'eq',
+            field: {
+              slug: field.slug
+            }
+          }))
+        })
+      }
+    }
+  }
+  return actions
 }

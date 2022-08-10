@@ -2,6 +2,7 @@ import { Connection, XkitJs } from '@xkit-co/xkit.js'
 import React, { FC, useEffect, useState } from 'react'
 import { Mapping } from '../..'
 import {
+  defaultEventActions,
   getAPIObject,
   getMapping,
   listAPIObjects,
@@ -18,6 +19,7 @@ import {
   ObjectMapping
 } from '../../interfaces/mapping.interface'
 import { xkitBrowserWindow } from '../../interfaces/window.interface'
+import Arrow from '../icons/Arrow'
 import Spinner from '../icons/Spinner'
 import XkitBranding from '../XkitBranding'
 import MapConfiguration from './MapConfiguration'
@@ -156,15 +158,23 @@ const MappingScreen: FC<MappingScreenProps> = ({
       ) : null
     case MappingStages.Connection:
       return connection ? (
-        <MapConnection
-          connection={connection}
-          reconnect={reconnect}
-          disconnect={disconnect}
-          onDone={() => {
-            setCurrentStage(MappingStages.Configuration)
-          }}
-          removeBranding={removeBranding}
-        />
+        <>
+          <Arrow
+            className='absolute top-3 left-3 w-4 h-4 block cursor-pointer rotate-180 fill-neutral-600'
+            onClick={() => {
+              setCurrentStage(MappingStages.Configuration)
+            }}
+          />
+          <MapConnection
+            connection={connection}
+            reconnect={reconnect}
+            disconnect={disconnect}
+            onDone={() => {
+              setCurrentStage(MappingStages.Configuration)
+            }}
+            removeBranding={removeBranding}
+          />
+        </>
       ) : null
     case MappingStages.Objects:
       return developerObjects && userObjects ? (
@@ -185,7 +195,9 @@ const MappingScreen: FC<MappingScreenProps> = ({
                 crm_object_id: developerObjects[currentDeveloperObjectIndex].id,
                 api_object_id: userObject.id,
                 transformations: [],
-                event_actions: []
+                event_actions: defaultEventActions(
+                  developerObjects[currentDeveloperObjectIndex]
+                )
               }
               setCurrentObjectMapping(newObjectMapping)
               updateMapping(newObjectMapping, objectMappings, setObjectMappings)
@@ -201,72 +213,98 @@ const MappingScreen: FC<MappingScreenProps> = ({
       ) : null
     case MappingStages.Mappings:
       return developerObjects && userObjects && connection ? (
-        <MapObjectView
-          developerObject={developerObjects[currentDeveloperObjectIndex]}
-          userObjects={userObjects}
-          objectMappings={objectMappings}
-          platformName={platformName}
-          connector={connection.connector}
-          onRemoveMapping={(objectMapping, displayedObjectMappings) => {
-            removeMapping(objectMapping, objectMappings, setObjectMappings)
-            if (displayedObjectMappings.length === 1) {
-              setCurrentStage(MappingStages.Objects)
-            }
-          }}
-          onSelectMapping={async (userObjectIndex, objectMapping, stage) => {
-            if (!userObjects[userObjectIndex].selector) {
-              const object = await getAPIObject(
-                xkit,
-                connection,
-                userObjects[userObjectIndex].slug,
-                reject
-              )
-              if (object) {
-                const clonedUserObjects =
-                  window.structuredClone<APIObject[]>(userObjects)
-                clonedUserObjects[userObjectIndex].selector = object.selector
-                setUserObjects(clonedUserObjects)
+        <>
+          <Arrow
+            className='absolute top-3 left-3 w-4 h-4 block cursor-pointer rotate-180 fill-neutral-600'
+            onClick={() => {
+              setCurrentStage(MappingStages.Configuration)
+            }}
+          />
+          <MapObjectView
+            developerObject={developerObjects[currentDeveloperObjectIndex]}
+            userObjects={userObjects}
+            objectMappings={objectMappings}
+            platformName={platformName}
+            connector={connection.connector}
+            onRemoveMapping={(objectMapping, displayedObjectMappings) => {
+              removeMapping(objectMapping, objectMappings, setObjectMappings)
+              if (displayedObjectMappings.length === 1) {
+                setCurrentStage(MappingStages.Objects)
               }
-            }
-            setCurrentUserObjectIndex(userObjectIndex)
-            setCurrentObjectMapping(objectMapping)
-            setCurrentStage(stage)
-          }}
-          onDone={() => {
-            setCurrentStage(MappingStages.Configuration)
-          }}
-          removeBranding={removeBranding}
-        />
+            }}
+            onSelectMapping={async (userObjectIndex, objectMapping, stage) => {
+              if (!userObjects[userObjectIndex].selector) {
+                const object = await getAPIObject(
+                  xkit,
+                  connection,
+                  userObjects[userObjectIndex].slug,
+                  reject
+                )
+                if (object) {
+                  const clonedUserObjects =
+                    window.structuredClone<APIObject[]>(userObjects)
+                  clonedUserObjects[userObjectIndex].selector = object.selector
+                  setUserObjects(clonedUserObjects)
+                }
+              }
+              setCurrentUserObjectIndex(userObjectIndex)
+              setCurrentObjectMapping(objectMapping)
+              setCurrentStage(stage)
+            }}
+            onDone={() => {
+              setCurrentStage(MappingStages.Configuration)
+            }}
+            removeBranding={removeBranding}
+          />
+        </>
       ) : null
     case MappingStages.Read:
       return developerObjects && userObjects && currentObjectMapping ? (
-        <MapRead
-          currentUserObject={userObjects[currentUserObjectIndex]}
-          developerObjects={developerObjects}
-          currentDeveloperObjectIndex={currentDeveloperObjectIndex}
-          objectMappings={objectMappings}
-          currentObjectMapping={currentObjectMapping}
-          platformName={platformName}
-          removeBranding={removeBranding}
-          setObjectMappings={setObjectMappings}
-          setCurrentObjectMapping={setCurrentObjectMapping}
-          setDeveloperObjects={setDeveloperObjects}
-          setCurrentStage={setCurrentStage}
-        />
+        <>
+          <Arrow
+            className='absolute top-3 left-3 w-4 h-4 block cursor-pointer rotate-180 fill-neutral-600'
+            onClick={() => {
+              setCurrentStage(MappingStages.Mappings)
+            }}
+          />
+          <MapRead
+            currentUserObject={userObjects[currentUserObjectIndex]}
+            developerObjects={developerObjects}
+            currentDeveloperObjectIndex={currentDeveloperObjectIndex}
+            objectMappings={objectMappings}
+            currentObjectMapping={currentObjectMapping}
+            platformName={platformName}
+            removeBranding={removeBranding}
+            setObjectMappings={setObjectMappings}
+            setCurrentObjectMapping={setCurrentObjectMapping}
+            setDeveloperObjects={setDeveloperObjects}
+            setCurrentStage={setCurrentStage}
+          />
+        </>
       ) : null
     case MappingStages.Write:
       return developerObjects && userObjects && currentObjectMapping ? (
-        <MapWrite
-          currentUserObject={userObjects[currentUserObjectIndex]}
-          currentDeveloperObject={developerObjects[currentDeveloperObjectIndex]}
-          objectMappings={objectMappings}
-          currentObjectMapping={currentObjectMapping}
-          platformName={platformName}
-          removeBranding={removeBranding}
-          setObjectMappings={setObjectMappings}
-          setCurrentObjectMapping={setCurrentObjectMapping}
-          setCurrentStage={setCurrentStage}
-        />
+        <>
+          <Arrow
+            className='absolute top-3 left-3 w-4 h-4 block cursor-pointer rotate-180 fill-neutral-600'
+            onClick={() => {
+              setCurrentStage(MappingStages.Mappings)
+            }}
+          />
+          <MapWrite
+            currentUserObject={userObjects[currentUserObjectIndex]}
+            currentDeveloperObject={
+              developerObjects[currentDeveloperObjectIndex]
+            }
+            objectMappings={objectMappings}
+            currentObjectMapping={currentObjectMapping}
+            platformName={platformName}
+            removeBranding={removeBranding}
+            setObjectMappings={setObjectMappings}
+            setCurrentObjectMapping={setCurrentObjectMapping}
+            setCurrentStage={setCurrentStage}
+          />
+        </>
       ) : null
     default:
       return null

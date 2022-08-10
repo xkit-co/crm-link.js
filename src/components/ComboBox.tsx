@@ -1,14 +1,16 @@
-import { InputType, Selector } from '../interfaces/mapping.interface'
 import React, { FC, useEffect, useRef, useState } from 'react'
+import { scopeID } from '..'
 import {
   findSelectedOption,
   supportedTransformations
 } from '../functions/mapping'
+import { InputType, Selector } from '../interfaces/mapping.interface'
 import Caret from './icons/Caret'
+import Cross from './icons/Cross'
 import Minus from './icons/Minus'
 import Plus from './icons/Plus'
-import Cross from './icons/Cross'
-import { scopeID } from '..'
+import Star from './icons/Star'
+import Tooltip from './Tooltip'
 
 const focusableClass = 'xkit-combobox-focusable'
 
@@ -43,6 +45,7 @@ export interface Option {
   value: string
   selector?: Selector
   children?: Option[]
+  match?: boolean
 }
 
 interface ComboBoxProps {
@@ -363,7 +366,8 @@ const OptionItem: FC<OptionItemProps> = ({
           'outline-offset-[-2px]',
           'outline-sky-500',
           disabled ? '' : `${focusableClass} hover:bg-black/5 cursor-pointer`,
-          option.value === selected ? 'bg-black/10' : ''
+          option.value === selected ? 'bg-black/10' : '',
+          option.match ? 'bg-yellow-50' : 'bg-white'
         ]
           .join(' ')
           .trim()}
@@ -410,6 +414,11 @@ const OptionItem: FC<OptionItemProps> = ({
         ) : (
           ''
         )}
+        {option.match ? (
+          <Tooltip text={`Suggested field from your CRM`} className='h-4'>
+            <Star className='h-4 w-4 shrink-0 pl-3 fill-neutral-500' />
+          </Tooltip>
+        ) : null}
       </div>
       {option.children && option.children.length && expanded ? (
         <div className='pl-4'>

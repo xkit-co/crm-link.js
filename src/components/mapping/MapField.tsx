@@ -186,7 +186,7 @@ const MapField: FC<MapFieldProps> = ({
             selected={selected}
             options={
               currentUserObject.selector
-                ? selectorsToOptions([currentUserObject.selector])
+                ? selectorsToOptions([currentUserObject.selector], field)
                 : []
             }
             allowFiltering={true}

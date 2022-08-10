@@ -122,7 +122,7 @@ const MapEvent: FC<MapEventProps> = ({
                   allowFiltering={true}
                   options={
                     currentUserObject.selector
-                      ? selectorsToOptions([currentUserObject.selector])
+                      ? selectorsToOptions([currentUserObject.selector], field)
                       : []
                   }
                   criteria={(option) => {
@@ -232,96 +232,115 @@ const MapEvent: FC<MapEventProps> = ({
               Use filters to find records by matching fields in your CRM to
               payload or static values
             </div>
-            {filters.map(({ transformation, index }) => (
-              <div
-                className='px-3 py-2 my-3 rounded flex items-center justify-between border border-solid border-neutral-200'
-                key={index}
-              >
-                <div>
-                  <div className='py-1 flex items-center justify-between'>
-                    <div className='text-sm w-[70px]'>Field</div>
-                    <div className='w-[150px]'>
-                      <ComboBox
-                        placeholder='Select field'
-                        selected={{
-                          value: transformation.source_pointer,
-                          static: false
-                        }}
-                        allowFiltering={true}
-                        options={
-                          currentUserObject.selector
-                            ? selectorsToOptions([currentUserObject.selector])
-                            : []
-                        }
-                        onSelect={(value) => {
-                          updateAction.onUserDefinedSelectField(value, index)
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <div className='py-1 flex items-center justify-between'>
-                    <div className='text-sm w-[70px]'>Operator</div>
-                    <div className='w-[150px]'>
-                      <ComboBox
-                        placeholder='Select operator'
-                        selected={{
-                          value: transformation.criteria_operator,
-                          static: false
-                        }}
-                        options={[{ label: 'Equals', value: 'eq' }]}
-                        onSelect={(value) => {
-                          searchAction.onFilterSelectOperator(value, index)
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <div className='py-1 flex items-center justify-between'>
-                    <div className='text-sm w-[70px]'>Value</div>
-                    <div className='w-[150px]'>
-                      <ComboBox
-                        placeholder='Choose value'
-                        selected={
-                          transformation.name === 'static'
-                            ? {
-                                value: transformation.static_value,
-                                static: true
-                              }
-                            : {
-                                value: transformation.field?.slug,
-                                static: false
-                              }
-                        }
-                        allowFiltering={true}
-                        allowStatic={true}
-                        options={event.fields.map((field) => ({
-                          value: field.slug,
-                          label: field.label,
-                          subLabel: field.simple_type.type
-                        }))}
-                        onSelect={(value, type) => {
-                          if (type === 'static') {
-                            searchAction.onFilterSelectStaticValue(value, index)
-                          } else {
-                            searchAction.onFilterSelectPayloadValue(
-                              value,
-                              index
-                            )
+            {filters.map(({ transformation, index }) => {
+              let matchField: CRMObjectField | undefined = undefined
+              if (
+                transformation.name !== 'static' &&
+                transformation.field?.slug
+              ) {
+                for (const field of event.fields) {
+                  if (field.slug === transformation.field.slug) {
+                    matchField = field
+                  }
+                }
+              }
+              return (
+                <div
+                  className='px-3 py-2 my-3 rounded flex items-center justify-between border border-solid border-neutral-200'
+                  key={index}
+                >
+                  <div>
+                    <div className='py-1 flex items-center justify-between'>
+                      <div className='text-sm w-[70px]'>Value</div>
+                      <div className='w-[150px]'>
+                        <ComboBox
+                          placeholder='Choose value'
+                          selected={
+                            transformation.name === 'static'
+                              ? {
+                                  value: transformation.static_value,
+                                  static: true
+                                }
+                              : {
+                                  value: transformation.field?.slug,
+                                  static: false
+                                }
                           }
-                        }}
-                      />
+                          allowFiltering={true}
+                          allowStatic={true}
+                          options={event.fields.map((field) => ({
+                            value: field.slug,
+                            label: field.label,
+                            subLabel: field.simple_type.type
+                          }))}
+                          onSelect={(value, type) => {
+                            if (type === 'static') {
+                              searchAction.onFilterSelectStaticValue(
+                                value,
+                                index
+                              )
+                            } else {
+                              searchAction.onFilterSelectPayloadValue(
+                                value,
+                                index
+                              )
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div className='py-1 flex items-center justify-between'>
+                      <div className='text-sm w-[70px]'>Operator</div>
+                      <div className='w-[150px]'>
+                        <ComboBox
+                          placeholder='Select operator'
+                          selected={{
+                            value: transformation.criteria_operator,
+                            static: false
+                          }}
+                          options={[{ label: 'Equals', value: 'eq' }]}
+                          onSelect={(value) => {
+                            searchAction.onFilterSelectOperator(value, index)
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div className='py-1 flex items-center justify-between'>
+                      <div className='text-sm w-[70px]'>Field</div>
+                      <div className='w-[150px]'>
+                        <ComboBox
+                          placeholder='Select field'
+                          selected={{
+                            value: transformation.source_pointer,
+                            static: false
+                          }}
+                          allowFiltering={true}
+                          options={
+                            currentUserObject.selector
+                              ? selectorsToOptions(
+                                  [currentUserObject.selector],
+                                  matchField
+                                )
+                              : []
+                          }
+                          onSelect={(value) => {
+                            updateAction.onUserDefinedSelectField(value, index)
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
+                  <Tooltip text={`Remove filter`}>
+                    <Trash
+                      className='h-4 w-4 shrink-0 fill-red-500 cursor-pointer'
+                      onClick={() => {
+                        updateAction.removeUserDefinedField(index)
+                      }}
+                    />
+                  </Tooltip>
                 </div>
-                <Tooltip text={`Remove filter`}>
-                  <Trash
-                    className='h-4 w-4 shrink-0 fill-red-500 cursor-pointer'
-                    onClick={() => {
-                      updateAction.removeUserDefinedField(index)
-                    }}
-                  />
-                </Tooltip>
-              </div>
-            ))}
+              )
+            })}
             <Button
               type='secondary'
               text='Add a search filter'
