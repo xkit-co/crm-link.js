@@ -1,4 +1,5 @@
 import { Connection, Connector, Platform, XkitJs } from '@xkit-co/xkit.js'
+import { IKitAPIError } from '@xkit-co/xkit.js/lib/api/request'
 import React, { FC, useCallback, useEffect, useState } from 'react'
 import { Mapping } from '..'
 import { friendlyMessage } from '../functions/errors'
@@ -39,7 +40,10 @@ const App: FC<AppProps> = ({
         try {
           setCurrentConnector(connector)
           setScreen(Screen.Connecting)
-          const connection = await xkit.addConnection(connector.slug)
+          const connection = await xkit.addConnection(
+            connector.slug,
+            mapping.connectionID
+          )
           setCurrentConnection(connection)
           setScreen(Screen.Mapping)
         } catch (error) {
@@ -49,7 +53,7 @@ const App: FC<AppProps> = ({
         return reject('Could not identify session.')
       }
     },
-    [xkit, reject]
+    [xkit, mapping.connectionID, reject]
   )
 
   const disconnect = async (connection: Connection) => {
@@ -111,7 +115,11 @@ const App: FC<AppProps> = ({
             )
           }
         } catch (error) {
-          return reject('Error while fetching existing CRM connections')
+          if (error instanceof IKitAPIError && error.statusCode === 404) {
+            // Such a connection doesn't exist and will have to be created
+          } else {
+            return reject('Error while fetching existing CRM connections')
+          }
         }
       }
 

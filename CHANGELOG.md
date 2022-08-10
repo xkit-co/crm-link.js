@@ -1,3 +1,7 @@
+## 2.7.0
+
+- Support for creating named connections via `connectionID` flag
+
 ## 2.6.0
 
 - Added suggested options while mapping
