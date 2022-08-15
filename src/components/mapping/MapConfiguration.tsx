@@ -48,7 +48,7 @@ const MapConfiguration: FC<MapConfigurationProps> = ({
           <div className='break-words'>{connection.connector.name}</div>
           {connection.enabled &&
           connection.authorization &&
-          connection.authorization.status !== 'error' ? (
+          connection.authorization.status === 'active' ? (
             <Tick className='h-4 w-4 shrink-0 pl-3 fill-emerald-500' />
           ) : (
             <Tooltip text={`Requires attention`}>
@@ -105,7 +105,7 @@ const MapConfiguration: FC<MapConfigurationProps> = ({
               !submitting &&
               connection.enabled &&
               connection.authorization &&
-              connection.authorization.status !== 'error' &&
+              connection.authorization.status === 'active' &&
               isAllObjectsSelected(developerObjects, objectMappings)
                 ? 'primary'
                 : 'disabled'

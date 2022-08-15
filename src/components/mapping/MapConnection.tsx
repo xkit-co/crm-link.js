@@ -25,7 +25,7 @@ const MapConnection: FC<MapConnectionProps> = ({
   const isActive =
     connection.enabled &&
     connection.authorization &&
-    connection.authorization.status !== 'error'
+    connection.authorization.status === 'active'
 
   return (
     <div className='flex flex-col h-[calc(100%-40px)]'>

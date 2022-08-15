@@ -1,6 +1,10 @@
+### 2.7.1
+
+- Fixed scenario where CRM Link is launched for a connection that is disconnected or broken
+
 ## 2.7.0
 
-- Support for creating named connections via `connectionID` flag
+- Added support for creating named connections via `connectionID` flag
 
 ## 2.6.0
 

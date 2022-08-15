@@ -105,10 +105,17 @@ const App: FC<AppProps> = ({
             id: mapping.connectionID
           })
           if (connection.connector.crm) {
-            setCurrentConnector(connection.connector)
-            setCurrentConnection(connection)
-            setScreen(Screen.Mapping)
-            return
+            if (
+              connection.authorization &&
+              connection.authorization.status === 'active'
+            ) {
+              setCurrentConnector(connection.connector)
+              setCurrentConnection(connection)
+              setScreen(Screen.Mapping)
+              return
+            }
+            // If there is no active authorization for the connection,
+            // we need to go through the connect flow again.
           } else {
             return reject(
               'Connection ID does not belong to a valid CRM connection'
