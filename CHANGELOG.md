@@ -1,6 +1,10 @@
+### 2.7.2
+
+- Fix to correctly handle the scenario where backend returns empty error response while fetching CRM Objects
+
 ### 2.7.1
 
-- Fixed scenario where CRM Link is launched for a connection that is disconnected or broken
+- Fix to correctly handle the scenario where CRM Link is launched for a connection that is disconnected or broken
 
 ## 2.7.0
 

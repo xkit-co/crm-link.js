@@ -413,17 +413,30 @@ export const listCRMObjects = async (
       const response = (await xkit.listCRMObjects(connection, {
         objects: mapping.objects
       })) as {
-        errors?: { error: string; path: string }[]
         objects: CRMObject[]
-      }
-      if (response.errors && response.errors.length) {
-        return reject(
-          `Error in mapping argument: ${response.errors[0].path} ${response.errors[0].error}`
-        )
       }
       return response.objects
     } catch (error) {
-      return reject(friendlyMessage(error.message))
+      if (error instanceof IKitAPIError && error.body) {
+        const errorBody = error.body as {
+          errors?: { error: string; path: string }[]
+        }
+        if (errorBody.errors) {
+          const errors = errorBody.errors
+            .map(
+              (individualError) =>
+                `${individualError.path} ${individualError.error}`
+            )
+            .join('; ')
+          return reject(
+            `Error in property 'objects'${errors ? `: ${errors}` : '.'}`
+          )
+        } else {
+          return reject(friendlyMessage(error.message))
+        }
+      } else {
+        return reject(friendlyMessage(error.message))
+      }
     }
   } else {
     return reject('Could not identify session.')
