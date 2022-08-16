@@ -1,8 +1,11 @@
 import React, { FC } from 'react'
 import {
+  findSelectedOption,
+  getSelectableCriteria,
   getTransformationIndex,
   isSelectableCriteria,
-  selectorsToOptions
+  selectorsToOptions,
+  supportedTransformations
 } from '../../functions/mapping'
 import {
   APIObject,
@@ -12,6 +15,7 @@ import {
 } from '../../interfaces/mapping.interface'
 import Accordion from '../Accordion'
 import Button from '../Button'
+import CheckBox from '../CheckBox'
 import ComboBox, { Option } from '../ComboBox'
 import Trash from '../icons/Trash'
 import Tooltip from '../Tooltip'
@@ -28,6 +32,10 @@ interface MapEventProps {
     removeUserDefinedField: (index: number) => void
     onUserDefinedSelectField: (value: string, index: number) => void
     onUserDefinedSelectValue: (value: string, index: number) => void
+    onDateTransformationChange: (
+      value: boolean,
+      existingFieldIndex: number
+    ) => void
     onPayloadFieldSelect: (
       value: string,
       type: string,
@@ -110,6 +118,54 @@ const MapEvent: FC<MapEventProps> = ({
               }
             }
 
+            let dateTransformation = null
+            if (selectedValue) {
+              const option = currentUserObject.selector
+                ? findSelectedOption(
+                    selectorsToOptions([currentUserObject.selector]),
+                    selectedValue
+                  )
+                : undefined
+              if (option) {
+                const selectableCriteria = getSelectableCriteria(option, field)
+                if (
+                  selectableCriteria &&
+                  selectableCriteria.transformations.includes('date')
+                ) {
+                  let disabled = false
+                  const intersectionTransformations =
+                    supportedTransformations.filter((transformation) =>
+                      selectableCriteria.transformations.includes(
+                        transformation
+                      )
+                    )
+                  if (
+                    intersectionTransformations.length === 1 &&
+                    intersectionTransformations[0] === 'date'
+                  ) {
+                    disabled = true
+                  }
+
+                  dateTransformation = (
+                    <CheckBox
+                      label='Convert to ISO 8601 date format'
+                      checked={
+                        currentObjectMapping.event_actions[existingEventIndex]
+                          .transformations[existingFieldIndex].name === 'date'
+                      }
+                      disabled={disabled}
+                      onChange={(value) => {
+                        updateAction.onDateTransformationChange(
+                          value,
+                          existingFieldIndex
+                        )
+                      }}
+                    />
+                  )
+                }
+              }
+            }
+
             return (
               <div className='py-3' key={field.slug}>
                 <div>{field.label}</div>
@@ -128,6 +184,9 @@ const MapEvent: FC<MapEventProps> = ({
                   criteria={(option) => {
                     return isSelectableCriteria(option, field)
                   }}
+                  getSelectableCriteria={(option) => {
+                    return getSelectableCriteria(option, field)
+                  }}
                   onSelect={(value, type) => {
                     updateAction.onPayloadFieldSelect(
                       value,
@@ -140,6 +199,7 @@ const MapEvent: FC<MapEventProps> = ({
                     updateAction.onPayloadFieldRemove(field.slug)
                   }}
                 />
+                {dateTransformation}
               </div>
             )
           })}

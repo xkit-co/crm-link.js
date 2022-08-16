@@ -116,6 +116,15 @@ export const MapEventsByType: FC<MapEventsByTypeProps> = ({
                   transformations[index].static_value = value
                 })
               },
+              onDateTransformationChange: (value, existingFieldIndex) => {
+                if (existingFieldIndex > -1) {
+                  modifyEventTransformations((transformations) => {
+                    transformations[existingFieldIndex].name = value
+                      ? 'date'
+                      : 'direct'
+                  })
+                }
+              },
               onPayloadFieldSelect: (
                 value,
                 type,
