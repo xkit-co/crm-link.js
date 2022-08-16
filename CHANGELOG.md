@@ -1,3 +1,7 @@
+### 2.7.3
+
+- Support date transformations for `create` and `update` action handlers
+
 ### 2.7.2
 
 - Fix to correctly handle the scenario where backend returns empty error response while fetching CRM Objects
