@@ -360,7 +360,7 @@ const MapEvent: FC<MapEventProps> = ({
                           }}
                           options={[
                             { label: 'Equals', value: 'eq' },
-                            { label: 'Contains', value: 'contains' }
+                            { label: 'Is contained in', value: 'contains' }
                           ]}
                           onSelect={(value) => {
                             searchAction.onFilterSelectOperator(value, index)
