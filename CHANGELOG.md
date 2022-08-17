@@ -1,6 +1,10 @@
+### 2.8.0
+
+- Added `contains` operator for search filters
+
 ### 2.7.3
 
-- Support date transformations for `create` and `update` action handlers
+- Fixed date transformations for `create` and `update` action handlers
 
 ### 2.7.2
 

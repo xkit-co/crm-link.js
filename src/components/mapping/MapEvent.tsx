@@ -358,7 +358,10 @@ const MapEvent: FC<MapEventProps> = ({
                             value: transformation.criteria_operator,
                             static: false
                           }}
-                          options={[{ label: 'Equals', value: 'eq' }]}
+                          options={[
+                            { label: 'Equals', value: 'eq' },
+                            { label: 'Is part of', value: 'contains' }
+                          ]}
                           onSelect={(value) => {
                             searchAction.onFilterSelectOperator(value, index)
                           }}
