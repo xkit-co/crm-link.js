@@ -122,7 +122,7 @@ const MapRead: FC<MapReadProps> = ({
                           case 'date':
                           case 'direct':
                           default:
-                            transformation.source_pointer = value
+                            transformation.source_pointer = `${value}`
                             break
                         }
 

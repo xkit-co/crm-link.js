@@ -25,7 +25,7 @@ interface MapFieldProps {
   currentUserObject: APIObject
   currentObjectMapping: ObjectMapping
   onFieldSelect: (
-    value: string,
+    value: string | boolean,
     type: string,
     slug: string,
     existingFieldIndex: number
@@ -65,7 +65,10 @@ const MapField: FC<MapFieldProps> = ({
     switch (currentObjectMapping.transformations[existingFieldIndex].name) {
       case 'static':
         selected.value =
-          currentObjectMapping.transformations[existingFieldIndex].static_value
+          currentObjectMapping.transformations[existingFieldIndex]
+            .static_value == null
+            ? undefined
+            : `${currentObjectMapping.transformations[existingFieldIndex].static_value}`
         selected.static = true
         break
       case 'date':
@@ -190,15 +193,29 @@ const MapField: FC<MapFieldProps> = ({
                 : []
             }
             allowFiltering={true}
-            allowStatic={true}
+            allowStatic={field.simple_type.type === 'string'}
+            allowStaticBoolean={field.simple_type.type === 'boolean'}
+            isSelectedStaticBoolean={
+              selected.static &&
+              typeof currentObjectMapping.transformations[existingFieldIndex]
+                .static_value === 'boolean'
+            }
             criteria={(option) => {
               return isSelectableCriteria(option, field)
             }}
             getSelectableCriteria={(option) => {
               return getSelectableCriteria(option, field)
             }}
-            onSelect={(value, type) => {
-              onFieldSelect(value, type, field.slug, existingFieldIndex)
+            onSelect={(value, type, staticBool) => {
+              if (type === 'static' && staticBool) {
+                if (value === 'true') {
+                  onFieldSelect(true, 'static', field.slug, existingFieldIndex)
+                } else if (value === 'false') {
+                  onFieldSelect(false, 'static', field.slug, existingFieldIndex)
+                }
+              } else {
+                onFieldSelect(value, type, field.slug, existingFieldIndex)
+              }
             }}
             onDeselect={() => {
               onFieldRemove(field.slug)

@@ -1,3 +1,8 @@
+### 2.9.0
+
+- Added support for static boolean values
+- Added back button in object selection screen
+
 ### 2.8.0
 
 - Added `contains` operator for search filters

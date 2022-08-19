@@ -31,7 +31,7 @@ interface MapEventProps {
     addUserDefinedField: () => void
     removeUserDefinedField: (index: number) => void
     onUserDefinedSelectField: (value: string, index: number) => void
-    onUserDefinedSelectValue: (value: string, index: number) => void
+    onUserDefinedSelectValue: (value: string | boolean, index: number) => void
     onDateTransformationChange: (
       value: boolean,
       existingFieldIndex: number
@@ -48,7 +48,8 @@ interface MapEventProps {
     addSearchFilter: () => void
     onFilterSelectOperator: (value: string, index: number) => void
     onFilterSelectPayloadValue: (value: string, index: number) => void
-    onFilterSelectStaticValue: (value: string, index: number) => void
+    onFilterSelectStaticValue: (value: string | boolean, index: number) => void
+    onFilterSelectField: (value: string, index: number) => void
   }
 }
 
@@ -103,11 +104,6 @@ const MapEvent: FC<MapEventProps> = ({
                 currentObjectMapping.event_actions[existingEventIndex]
                   .transformations[existingFieldIndex].name
               ) {
-                case 'static':
-                  selectedValue =
-                    currentObjectMapping.event_actions[existingEventIndex]
-                      .transformations[existingFieldIndex].static_value
-                  break
                 case 'date':
                 case 'direct':
                 default:
@@ -207,63 +203,109 @@ const MapEvent: FC<MapEventProps> = ({
             Configure fields in your CRM to {selectedActionType} with static
             values when this event is triggered
           </div>
-          {userDefinedTransformations.map(({ transformation, index }) => (
-            <div className='py-3 flex items-center justify-between' key={index}>
-              <div className='w-[120px]'>
-                <ComboBox
-                  placeholder='Select field'
-                  selected={{
-                    value: transformation.source_pointer,
-                    static: false
-                  }}
-                  allowFiltering={true}
-                  options={
-                    currentUserObject.selector
-                      ? selectorsToOptions([currentUserObject.selector])
-                      : []
-                  }
-                  criteria={(option) => {
-                    return isSelectableCriteria(option, {
-                      simple_type: {
-                        type: 'string',
-                        format: null
-                      },
-                      slug: '',
-                      label: '',
-                      description: ''
-                    })
-                  }}
-                  onSelect={(value) => {
-                    updateAction.onUserDefinedSelectField(value, index)
-                  }}
-                />
+          {userDefinedTransformations.map(({ transformation, index }) => {
+            const options = currentUserObject.selector
+              ? selectorsToOptions([currentUserObject.selector])
+              : []
+            const selectedOption = findSelectedOption(
+              options,
+              transformation.source_pointer
+            )
+            const needsBooleanValue = selectedOption
+              ? isSelectableCriteria(selectedOption, {
+                  simple_type: {
+                    type: 'boolean',
+                    format: null
+                  },
+                  slug: '',
+                  label: '',
+                  description: ''
+                })
+              : false
+            return (
+              <div
+                className='py-3 flex items-center justify-between'
+                key={index}
+              >
+                <div className='w-[120px]'>
+                  <ComboBox
+                    placeholder='Select field'
+                    selected={{
+                      value: transformation.source_pointer,
+                      static: false
+                    }}
+                    allowFiltering={true}
+                    options={options}
+                    criteria={(option) => {
+                      // We are okay with any field that can transform to a plain string or boolean
+                      return (
+                        isSelectableCriteria(option, {
+                          simple_type: {
+                            type: 'string',
+                            format: null
+                          },
+                          slug: '',
+                          label: '',
+                          description: ''
+                        }) ||
+                        isSelectableCriteria(option, {
+                          simple_type: {
+                            type: 'boolean',
+                            format: null
+                          },
+                          slug: '',
+                          label: '',
+                          description: ''
+                        })
+                      )
+                    }}
+                    onSelect={(value) => {
+                      updateAction.onUserDefinedSelectField(value, index)
+                    }}
+                  />
+                </div>
+                <div className='w-[120px]'>
+                  <ComboBox
+                    placeholder='Static data'
+                    selected={
+                      transformation.static_value == null
+                        ? { value: undefined, static: false }
+                        : {
+                            value: `${transformation.static_value}`,
+                            static: true
+                          }
+                    }
+                    allowFiltering={true}
+                    allowStatic={!needsBooleanValue}
+                    allowStaticBoolean={needsBooleanValue}
+                    isSelectedStaticBoolean={
+                      typeof transformation.static_value === 'boolean'
+                    }
+                    options={[]}
+                    onSelect={(value, type, staticBool) => {
+                      if (staticBool) {
+                        if (value === 'true') {
+                          updateAction.onUserDefinedSelectValue(true, index)
+                        } else if (value === 'false') {
+                          updateAction.onUserDefinedSelectValue(false, index)
+                        }
+                      } else {
+                        updateAction.onUserDefinedSelectValue(value, index)
+                      }
+                    }}
+                  />
+                </div>
+                <Tooltip text={`Remove field`}>
+                  <Trash
+                    className='h-4 w-4 shrink-0 fill-red-500 cursor-pointer'
+                    onClick={() => {
+                      updateAction.removeUserDefinedField(index)
+                    }}
+                  />
+                </Tooltip>
               </div>
-              <div className='w-[120px]'>
-                <ComboBox
-                  placeholder='Static data'
-                  selected={
-                    transformation.static_value
-                      ? { value: transformation.static_value, static: true }
-                      : { value: undefined, static: false }
-                  }
-                  allowFiltering={true}
-                  allowStatic={true}
-                  options={[]}
-                  onSelect={(value) => {
-                    updateAction.onUserDefinedSelectValue(value, index)
-                  }}
-                />
-              </div>
-              <Tooltip text={`Remove field`}>
-                <Trash
-                  className='h-4 w-4 shrink-0 fill-red-500 cursor-pointer'
-                  onClick={() => {
-                    updateAction.removeUserDefinedField(index)
-                  }}
-                />
-              </Tooltip>
-            </div>
-          ))}
+            )
+          })}
           <div className='py-2'>
             <Button
               type='secondary'
@@ -318,7 +360,7 @@ const MapEvent: FC<MapEventProps> = ({
                           selected={
                             transformation.name === 'static'
                               ? {
-                                  value: transformation.static_value,
+                                  value: `${transformation.static_value}`,
                                   static: true
                                 }
                               : {
@@ -328,17 +370,36 @@ const MapEvent: FC<MapEventProps> = ({
                           }
                           allowFiltering={true}
                           allowStatic={true}
+                          allowStaticBoolean={true}
+                          isSelectedStaticBoolean={
+                            transformation.name === 'static' &&
+                            typeof transformation.static_value === 'boolean'
+                          }
                           options={event.fields.map((field) => ({
                             value: field.slug,
                             label: field.label,
                             subLabel: field.simple_type.type
                           }))}
-                          onSelect={(value, type) => {
+                          onSelect={(value, type, staticBool) => {
                             if (type === 'static') {
-                              searchAction.onFilterSelectStaticValue(
-                                value,
-                                index
-                              )
+                              if (staticBool) {
+                                if (value === 'true') {
+                                  searchAction.onFilterSelectStaticValue(
+                                    true,
+                                    index
+                                  )
+                                } else if (value === 'false') {
+                                  searchAction.onFilterSelectStaticValue(
+                                    false,
+                                    index
+                                  )
+                                }
+                              } else {
+                                searchAction.onFilterSelectStaticValue(
+                                  value,
+                                  index
+                                )
+                              }
                             } else {
                               searchAction.onFilterSelectPayloadValue(
                                 value,
@@ -387,7 +448,7 @@ const MapEvent: FC<MapEventProps> = ({
                               : []
                           }
                           onSelect={(value) => {
-                            updateAction.onUserDefinedSelectField(value, index)
+                            searchAction.onFilterSelectField(value, index)
                           }}
                         />
                       </div>

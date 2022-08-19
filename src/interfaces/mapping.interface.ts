@@ -69,7 +69,7 @@ export interface Transformation {
   criteria_operator?: string
   name: string
   source_pointer?: string
-  static_value?: string
+  static_value?: string | boolean
 }
 
 export interface ObjectMapping {

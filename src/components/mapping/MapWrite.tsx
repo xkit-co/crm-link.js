@@ -109,6 +109,7 @@ export const MapEventsByType: FC<MapEventsByTypeProps> = ({
               onUserDefinedSelectField: (value, index) => {
                 modifyEventTransformations((transformations) => {
                   transformations[index].source_pointer = value
+                  delete transformations[index].static_value
                 })
               },
               onUserDefinedSelectValue: (value, index) => {
@@ -185,6 +186,11 @@ export const MapEventsByType: FC<MapEventsByTypeProps> = ({
                   transformations[index].static_value = value
                   transformations[index].name = 'static'
                   delete transformations[index].field
+                })
+              },
+              onFilterSelectField: (value, index) => {
+                modifyEventTransformations((transformations) => {
+                  transformations[index].source_pointer = value
                 })
               }
             }}

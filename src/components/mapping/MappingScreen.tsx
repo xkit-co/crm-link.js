@@ -178,38 +178,51 @@ const MappingScreen: FC<MappingScreenProps> = ({
       ) : null
     case MappingStages.Objects:
       return developerObjects && userObjects ? (
-        <div className='flex flex-col h-[calc(100%-40px)]'>
-          <div className='text-sm py-2.5 px-6'>
-            Choose an object from your CRM that you would like to map to{' '}
-            {developerObjects[currentDeveloperObjectIndex].label}
-          </div>
-          <div className='text-xs text-neutral-500 py-1 px-6'>
-            {developerObjects[currentDeveloperObjectIndex].description}
-          </div>
-          <MapObject
-            userObjects={userObjects}
-            developerObject={developerObjects[currentDeveloperObjectIndex]}
-            objectMappings={objectMappings}
-            onObjectSelect={(userObject) => {
-              const newObjectMapping = {
-                crm_object_id: developerObjects[currentDeveloperObjectIndex].id,
-                api_object_id: userObject.id,
-                transformations: [],
-                event_actions: defaultEventActions(
-                  developerObjects[currentDeveloperObjectIndex]
-                )
-              }
-              setCurrentObjectMapping(newObjectMapping)
-              updateMapping(newObjectMapping, objectMappings, setObjectMappings)
-              setCurrentStage(MappingStages.Mappings)
+        <>
+          <Arrow
+            className='absolute top-3 left-3 w-4 h-4 block cursor-pointer rotate-180 fill-neutral-600'
+            onClick={() => {
+              setCurrentStage(MappingStages.Configuration)
             }}
           />
-          {removeBranding ? null : (
-            <div className='py-2.5'>
-              <XkitBranding />
+          <div className='flex flex-col h-[calc(100%-40px)]'>
+            <div className='text-sm py-2.5 px-6'>
+              Choose an object from your CRM that you would like to map to{' '}
+              {developerObjects[currentDeveloperObjectIndex].label}
             </div>
-          )}
-        </div>
+            <div className='text-xs text-neutral-500 py-1 px-6'>
+              {developerObjects[currentDeveloperObjectIndex].description}
+            </div>
+            <MapObject
+              userObjects={userObjects}
+              developerObject={developerObjects[currentDeveloperObjectIndex]}
+              objectMappings={objectMappings}
+              onObjectSelect={(userObject) => {
+                const newObjectMapping = {
+                  crm_object_id:
+                    developerObjects[currentDeveloperObjectIndex].id,
+                  api_object_id: userObject.id,
+                  transformations: [],
+                  event_actions: defaultEventActions(
+                    developerObjects[currentDeveloperObjectIndex]
+                  )
+                }
+                setCurrentObjectMapping(newObjectMapping)
+                updateMapping(
+                  newObjectMapping,
+                  objectMappings,
+                  setObjectMappings
+                )
+                setCurrentStage(MappingStages.Mappings)
+              }}
+            />
+            {removeBranding ? null : (
+              <div className='py-2.5'>
+                <XkitBranding />
+              </div>
+            )}
+          </div>
+        </>
       ) : null
     case MappingStages.Mappings:
       return developerObjects && userObjects && connection ? (

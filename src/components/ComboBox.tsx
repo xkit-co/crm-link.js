@@ -53,13 +53,15 @@ interface ComboBoxProps {
   options: Option[]
   allowFiltering?: boolean
   allowStatic?: boolean
+  allowStaticBoolean?: boolean
   selected: {
     value?: string
     static: boolean
   }
+  isSelectedStaticBoolean?: boolean
   criteria?: (option: Option) => boolean
   getSelectableCriteria?: (option: Option) => InputType | undefined
-  onSelect: (value: string, type: string) => void
+  onSelect: (value: string, type: string, staticBool?: boolean) => void
   onDeselect?: () => void
 }
 
@@ -68,7 +70,9 @@ const ComboBox: FC<ComboBoxProps> = ({
   options,
   allowFiltering,
   allowStatic,
+  allowStaticBoolean,
   selected,
+  isSelectedStaticBoolean,
   criteria,
   getSelectableCriteria,
   onSelect,
@@ -121,8 +125,10 @@ const ComboBox: FC<ComboBoxProps> = ({
 
   const selectedOption: Option | undefined = selected.static
     ? {
-        label: `"${selected.value || ''}"`,
-        subLabel: 'static',
+        label: isSelectedStaticBoolean
+          ? `${selected.value || ''}`
+          : `"${selected.value || ''}"`,
+        subLabel: isSelectedStaticBoolean ? 'static boolean' : 'static string',
         value: selected.value || ''
       }
     : findSelectedOption(options, selected.value)
@@ -236,13 +242,21 @@ const ComboBox: FC<ComboBoxProps> = ({
                 ref={searchFieldRef}
               />
             ) : null}
-            {allowStatic && (selected.static || searchFieldText) ? (
+            {/*
+                We want to show a pre-populated option at the top for a static string if:
+                1. Static strings are allowed AND
+                  i.  There is something static selected that is not a static boolean OR
+                  ii. There is something typed in the search bar
+              */}
+            {allowStatic &&
+            ((selected.static && !isSelectedStaticBoolean) ||
+              searchFieldText) ? (
               <OptionItem
                 option={
                   searchFieldText
                     ? {
                         label: `"${searchFieldText}"`,
-                        subLabel: 'static',
+                        subLabel: 'static string',
                         value: searchFieldText
                       }
                     : selectedOption!
@@ -256,6 +270,40 @@ const ComboBox: FC<ComboBoxProps> = ({
                 }}
                 searchFieldText={searchFieldText}
               />
+            ) : null}
+            {allowStaticBoolean ? (
+              <>
+                <OptionItem
+                  option={{
+                    label: 'True',
+                    subLabel: 'static boolean',
+                    value: 'true'
+                  }}
+                  selected={selected.static ? selected.value : undefined}
+                  onSelect={(value) => {
+                    onSelect(value, 'static', true)
+                  }}
+                  close={() => {
+                    setVisible(false)
+                  }}
+                  searchFieldText={searchFieldText}
+                />
+                <OptionItem
+                  option={{
+                    label: 'False',
+                    subLabel: 'static boolean',
+                    value: 'false'
+                  }}
+                  selected={selected.static ? selected.value : undefined}
+                  onSelect={(value) => {
+                    onSelect(value, 'static', true)
+                  }}
+                  close={() => {
+                    setVisible(false)
+                  }}
+                  searchFieldText={searchFieldText}
+                />
+              </>
             ) : null}
             {options
               .filter((option) => filterOption(option, searchFieldText))

@@ -134,13 +134,15 @@ export const isEventsByTypeSelected = (
       )
       if (
         existingEventIndex > -1 &&
-        objectMappingEvents[existingEventIndex].action_type === 'update'
+        (objectMappingEvents[existingEventIndex].action_type === 'update' ||
+          objectMappingEvents[existingEventIndex].action_type === 'create')
       ) {
         for (const transformation of objectMappingEvents[existingEventIndex]
           .transformations) {
           if (
             !transformation.field &&
-            (!transformation.source_pointer || !transformation.static_value)
+            (!transformation.source_pointer ||
+              transformation.static_value == null)
           ) {
             return false
           }
@@ -156,7 +158,7 @@ export const isEventsByTypeSelected = (
             !transformation.criteria_operator ||
             !(
               (transformation.field && transformation.field.slug) ||
-              transformation.static_value
+              transformation.static_value != null
             )
           ) {
             return false
