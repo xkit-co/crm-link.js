@@ -149,6 +149,18 @@ export const isEventsByTypeSelected = (
             return false
           }
         }
+        for (const field of event.fields || []) {
+          if (
+            !(
+              getTransformationIndex(
+                field.slug,
+                objectMappingEvents[existingEventIndex].transformations
+              ) > -1
+            )
+          ) {
+            return false
+          }
+        }
       } else if (
         existingEventIndex > -1 &&
         objectMappingEvents[existingEventIndex].action_type === 'search'

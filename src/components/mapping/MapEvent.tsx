@@ -98,12 +98,16 @@ const MapEvent: FC<MapEventProps> = ({
               currentObjectMapping.event_actions[existingEventIndex]
                 .transformations
             )
+            let isSelectedEmpty = false
             let selectedValue = undefined
             if (existingFieldIndex > -1) {
               switch (
                 currentObjectMapping.event_actions[existingEventIndex]
                   .transformations[existingFieldIndex].name
               ) {
+                case 'empty':
+                  isSelectedEmpty = true
+                  break
                 case 'date':
                 case 'direct':
                 default:
@@ -172,6 +176,8 @@ const MapEvent: FC<MapEventProps> = ({
                   placeholder='Select field'
                   selected={{ value: selectedValue, static: false }}
                   allowFiltering={true}
+                  allowEmpty={true}
+                  isSelectedEmpty={isSelectedEmpty}
                   options={
                     currentUserObject.selector
                       ? selectorsToOptions([currentUserObject.selector], field)

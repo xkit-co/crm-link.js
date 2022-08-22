@@ -195,10 +195,17 @@ const MapField: FC<MapFieldProps> = ({
             allowFiltering={true}
             allowStatic={field.simple_type.type === 'string'}
             allowStaticBoolean={field.simple_type.type === 'boolean'}
+            allowEmpty={true}
             isSelectedStaticBoolean={
               selected.static &&
+              existingFieldIndex > -1 &&
               typeof currentObjectMapping.transformations[existingFieldIndex]
                 .static_value === 'boolean'
+            }
+            isSelectedEmpty={
+              existingFieldIndex > -1 &&
+              currentObjectMapping.transformations[existingFieldIndex].name ===
+                'empty'
             }
             criteria={(option) => {
               return isSelectableCriteria(option, field)

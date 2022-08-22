@@ -134,8 +134,11 @@ export const MapEventsByType: FC<MapEventsByTypeProps> = ({
               ) => {
                 const transformation: Transformation = {
                   field: { slug: payloadField.slug },
-                  name: type,
-                  source_pointer: value
+                  name: type
+                }
+
+                if (type !== 'empty') {
+                  transformation.source_pointer = value
                 }
 
                 modifyEventTransformations((transformations) => {

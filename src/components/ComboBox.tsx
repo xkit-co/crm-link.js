@@ -54,11 +54,13 @@ interface ComboBoxProps {
   allowFiltering?: boolean
   allowStatic?: boolean
   allowStaticBoolean?: boolean
+  allowEmpty?: boolean
   selected: {
     value?: string
     static: boolean
   }
   isSelectedStaticBoolean?: boolean
+  isSelectedEmpty?: boolean
   criteria?: (option: Option) => boolean
   getSelectableCriteria?: (option: Option) => InputType | undefined
   onSelect: (value: string, type: string, staticBool?: boolean) => void
@@ -71,8 +73,10 @@ const ComboBox: FC<ComboBoxProps> = ({
   allowFiltering,
   allowStatic,
   allowStaticBoolean,
+  allowEmpty,
   selected,
   isSelectedStaticBoolean,
+  isSelectedEmpty,
   criteria,
   getSelectableCriteria,
   onSelect,
@@ -123,15 +127,28 @@ const ComboBox: FC<ComboBoxProps> = ({
     }
   }, [visible, allowFiltering, inputRef, dropdownRef, searchFieldRef])
 
-  const selectedOption: Option | undefined = selected.static
-    ? {
-        label: isSelectedStaticBoolean
-          ? `${selected.value || ''}`
-          : `"${selected.value || ''}"`,
-        subLabel: isSelectedStaticBoolean ? 'static boolean' : 'static string',
-        value: selected.value || ''
-      }
-    : findSelectedOption(options, selected.value)
+  let selectedOption: Option | undefined = undefined
+  if (isSelectedEmpty) {
+    selectedOption = {
+      label: `Don't map any data`,
+      subLabel: '',
+      value: 'empty'
+    }
+  } else if (selected.static && isSelectedStaticBoolean) {
+    selectedOption = {
+      label: `${selected.value || ''}`,
+      subLabel: 'static boolean',
+      value: selected.value || ''
+    }
+  } else if (selected.static) {
+    selectedOption = {
+      label: `"${selected.value || ''}"`,
+      subLabel: 'static string',
+      value: selected.value || ''
+    }
+  } else {
+    selectedOption = findSelectedOption(options, selected.value)
+  }
 
   return (
     <>
@@ -261,7 +278,13 @@ const ComboBox: FC<ComboBoxProps> = ({
                       }
                     : selectedOption!
                 }
-                selected={selected.static ? selected.value : undefined}
+                selected={
+                  selected.static &&
+                  !isSelectedStaticBoolean &&
+                  !isSelectedEmpty
+                    ? selectedOption?.value
+                    : undefined
+                }
                 onSelect={(value) => {
                   onSelect(value, 'static')
                 }}
@@ -279,7 +302,13 @@ const ComboBox: FC<ComboBoxProps> = ({
                     subLabel: 'static boolean',
                     value: 'true'
                   }}
-                  selected={selected.static ? selected.value : undefined}
+                  selected={
+                    selected.static &&
+                    isSelectedStaticBoolean &&
+                    !isSelectedEmpty
+                      ? selectedOption?.value
+                      : undefined
+                  }
                   onSelect={(value) => {
                     onSelect(value, 'static', true)
                   }}
@@ -294,7 +323,13 @@ const ComboBox: FC<ComboBoxProps> = ({
                     subLabel: 'static boolean',
                     value: 'false'
                   }}
-                  selected={selected.static ? selected.value : undefined}
+                  selected={
+                    selected.static &&
+                    isSelectedStaticBoolean &&
+                    !isSelectedEmpty
+                      ? selectedOption?.value
+                      : undefined
+                  }
                   onSelect={(value) => {
                     onSelect(value, 'static', true)
                   }}
@@ -304,6 +339,23 @@ const ComboBox: FC<ComboBoxProps> = ({
                   searchFieldText={searchFieldText}
                 />
               </>
+            ) : null}
+            {allowEmpty ? (
+              <OptionItem
+                option={{
+                  label: `Don't map any data`,
+                  subLabel: '',
+                  value: 'empty'
+                }}
+                selected={isSelectedEmpty ? selectedOption?.value : undefined}
+                onSelect={(value) => {
+                  onSelect(value, 'empty')
+                }}
+                close={() => {
+                  setVisible(false)
+                }}
+                searchFieldText={searchFieldText}
+              />
             ) : null}
             {options
               .filter((option) => filterOption(option, searchFieldText))
@@ -400,6 +452,14 @@ const OptionItem: FC<OptionItemProps> = ({
     }
   }
 
+  let optionBackground = 'bg-white'
+  if (option.match) {
+    optionBackground = 'bg-yellow-50'
+  }
+  if (option.value === selected) {
+    optionBackground = 'bg-black/10'
+  }
+
   return (
     <>
       <div
@@ -414,8 +474,7 @@ const OptionItem: FC<OptionItemProps> = ({
           'outline-offset-[-2px]',
           'outline-sky-500',
           disabled ? '' : `${focusableClass} hover:bg-black/5 cursor-pointer`,
-          option.value === selected ? 'bg-black/10' : '',
-          option.match ? 'bg-yellow-50' : 'bg-white'
+          optionBackground
         ]
           .join(' ')
           .trim()}
