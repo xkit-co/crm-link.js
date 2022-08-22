@@ -1,3 +1,8 @@
+### 2.10.0
+
+- Added ability to not take any action for an event
+- Added ability to opt-out from selecting a field for data mapping
+
 ### 2.9.0
 
 - Added support for static boolean values
