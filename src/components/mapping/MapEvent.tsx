@@ -486,6 +486,10 @@ const MapEvent: FC<MapEventProps> = ({
         {
           label: `Update an existing ${currentUserObject.label_one}`,
           value: 'update'
+        },
+        {
+          label: `Don't take any action`,
+          value: 'noop'
         }
       ]
       break
@@ -494,6 +498,10 @@ const MapEvent: FC<MapEventProps> = ({
         {
           label: `Create a new ${currentUserObject.label_one}`,
           value: 'create'
+        },
+        {
+          label: `Don't take any action`,
+          value: 'noop'
         }
       ]
       break
@@ -506,11 +514,21 @@ const MapEvent: FC<MapEventProps> = ({
         {
           label: `Delete a linked ${currentUserObject.label_one}`,
           value: 'delete'
+        },
+        {
+          label: `Don't take any action`,
+          value: 'noop'
         }
       ]
       break
     case 'search':
-      availableActions = [{ label: 'Build search query', value: 'search' }]
+      availableActions = [
+        { label: 'Build search query', value: 'search' },
+        {
+          label: `Don't take any action`,
+          value: 'noop'
+        }
+      ]
       break
     default:
       break

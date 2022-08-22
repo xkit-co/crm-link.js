@@ -132,7 +132,9 @@ export const isEventsByTypeSelected = (
       const existingEventIndex = objectMappingEvents.findIndex(
         (objectMappingEvent) => objectMappingEvent.event.slug === event.slug
       )
-      if (
+      if (!(existingEventIndex > -1)) {
+        return false
+      } else if (
         existingEventIndex > -1 &&
         (objectMappingEvents[existingEventIndex].action_type === 'update' ||
           objectMappingEvents[existingEventIndex].action_type === 'create')
@@ -645,6 +647,30 @@ export const defaultEventActions = (
               slug: field.slug
             }
           }))
+        })
+      } else if (event.type === 'create') {
+        actions.push({
+          event: {
+            slug: event.slug
+          },
+          action_type: 'create',
+          transformations: []
+        })
+      } else if (event.type === 'update') {
+        actions.push({
+          event: {
+            slug: event.slug
+          },
+          action_type: 'update',
+          transformations: []
+        })
+      } else if (event.type === 'delete') {
+        actions.push({
+          event: {
+            slug: event.slug
+          },
+          action_type: 'delete',
+          transformations: []
         })
       }
     }
