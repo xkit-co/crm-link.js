@@ -1,14 +1,18 @@
-### 2.10.0
+## 2.10.0
 
 - Added ability to not take any action for an event
 - Added ability to opt-out from selecting a field for data mapping
 
-### 2.9.0
+### 2.9.1
+
+- Fix to allow only compatible fields to be selected in search filter field dropdown
+
+## 2.9.0
 
 - Added support for static boolean values
 - Added back button in object selection screen
 
-### 2.8.0
+## 2.8.0
 
 - Added `contains` operator for search filters
 

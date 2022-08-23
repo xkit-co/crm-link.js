@@ -173,6 +173,7 @@ export const MapEventsByType: FC<MapEventsByTypeProps> = ({
               onFilterSelectOperator: (value, index) => {
                 modifyEventTransformations((transformations) => {
                   transformations[index].criteria_operator = value
+                  delete transformations[index].source_pointer
                 })
               },
               onFilterSelectPayloadValue: (value, index) => {
@@ -181,6 +182,7 @@ export const MapEventsByType: FC<MapEventsByTypeProps> = ({
                     slug: value
                   }
                   transformations[index].name = 'direct'
+                  delete transformations[index].source_pointer
                   delete transformations[index].static_value
                 })
               },
@@ -188,6 +190,7 @@ export const MapEventsByType: FC<MapEventsByTypeProps> = ({
                 modifyEventTransformations((transformations) => {
                   transformations[index].static_value = value
                   transformations[index].name = 'static'
+                  delete transformations[index].source_pointer
                   delete transformations[index].field
                 })
               },
