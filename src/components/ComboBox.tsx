@@ -49,6 +49,7 @@ export interface Option {
 }
 
 interface ComboBoxProps {
+  disabled?: boolean
   placeholder: string
   options: Option[]
   allowFiltering?: boolean
@@ -68,6 +69,7 @@ interface ComboBoxProps {
 }
 
 const ComboBox: FC<ComboBoxProps> = ({
+  disabled,
   placeholder,
   options,
   allowFiltering,
@@ -153,11 +155,32 @@ const ComboBox: FC<ComboBoxProps> = ({
   return (
     <>
       <div
-        className='text-sm px-2 py-1 flex justify-between items-center rounded border-solid border border-neutral-200 shadow-inner cursor-text focus:outline focus:outline-2 outline-offset-1 outline-sky-500'
+        className={[
+          'text-sm',
+          'px-2',
+          'py-1',
+          'flex',
+          'justify-between',
+          'items-center',
+          'rounded',
+          'border-solid',
+          'border',
+          'border-neutral-200',
+          'shadow-inner',
+          disabled ? 'cursor-default' : 'cursor-text',
+          disabled ? 'bg-neutral-200' : 'bg-white',
+          disabled
+            ? ''
+            : 'focus:outline focus:outline-2 outline-offset-1 outline-sky-500'
+        ]
+          .join(' ')
+          .trim()}
         tabIndex={0}
         onClick={() => {
-          setSearchFieldText('')
-          setVisible(true)
+          if (!disabled) {
+            setSearchFieldText('')
+            setVisible(true)
+          }
         }}
         ref={inputRef}
       >

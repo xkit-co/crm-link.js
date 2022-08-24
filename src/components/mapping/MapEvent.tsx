@@ -362,6 +362,12 @@ const MapEvent: FC<MapEventProps> = ({
                   }
                 }
               }
+              const disabled =
+                transformation.criteria_operator &&
+                (transformation.static_value != null ||
+                  transformation.field?.slug)
+                  ? false
+                  : true
               return (
                 <div
                   className='px-3 py-2 my-3 rounded flex items-center justify-between border border-solid border-neutral-200'
@@ -445,100 +451,97 @@ const MapEvent: FC<MapEventProps> = ({
                         />
                       </div>
                     </div>
-                    {transformation.criteria_operator &&
-                    (transformation.static_value != null ||
-                      transformation.field?.slug) ? (
-                      <div className='py-1 flex items-center justify-between'>
-                        <div className='text-sm w-[70px]'>Field</div>
-                        <div className='w-[150px]'>
-                          <ComboBox
-                            placeholder='Select field'
-                            selected={{
-                              value: transformation.source_pointer,
-                              static: false
-                            }}
-                            allowFiltering={true}
-                            options={
-                              currentUserObject.selector
-                                ? selectorsToOptions(
-                                    [currentUserObject.selector],
-                                    matchField
-                                  )
-                                : []
+                    <div className='py-1 flex items-center justify-between'>
+                      <div className='text-sm w-[70px]'>Field</div>
+                      <div className='w-[150px]'>
+                        <ComboBox
+                          disabled={disabled}
+                          placeholder={disabled ? '' : 'Select field'}
+                          selected={{
+                            value: transformation.source_pointer,
+                            static: false
+                          }}
+                          allowFiltering={true}
+                          options={
+                            currentUserObject.selector
+                              ? selectorsToOptions(
+                                  [currentUserObject.selector],
+                                  matchField
+                                )
+                              : []
+                          }
+                          criteria={(option) => {
+                            if (matchField) {
+                              return isSelectableCriteria(option, matchField)
+                            } else if (
+                              transformation.name === 'static' &&
+                              transformation.static_value != null &&
+                              typeof transformation.static_value === 'boolean'
+                            ) {
+                              return isSelectableCriteria(option, {
+                                simple_type: {
+                                  type: 'boolean',
+                                  format: null
+                                },
+                                slug: '',
+                                label: '',
+                                description: ''
+                              })
+                            } else if (
+                              transformation.name === 'static' &&
+                              transformation.static_value != null
+                            ) {
+                              return isSelectableCriteria(option, {
+                                simple_type: {
+                                  type: 'string',
+                                  format: null
+                                },
+                                slug: '',
+                                label: '',
+                                description: ''
+                              })
                             }
-                            criteria={(option) => {
-                              if (matchField) {
-                                return isSelectableCriteria(option, matchField)
-                              } else if (
-                                transformation.name === 'static' &&
-                                transformation.static_value != null &&
-                                typeof transformation.static_value === 'boolean'
-                              ) {
-                                return isSelectableCriteria(option, {
-                                  simple_type: {
-                                    type: 'boolean',
-                                    format: null
-                                  },
-                                  slug: '',
-                                  label: '',
-                                  description: ''
-                                })
-                              } else if (
-                                transformation.name === 'static' &&
-                                transformation.static_value != null
-                              ) {
-                                return isSelectableCriteria(option, {
-                                  simple_type: {
-                                    type: 'string',
-                                    format: null
-                                  },
-                                  slug: '',
-                                  label: '',
-                                  description: ''
-                                })
-                              }
-                              return false
-                            }}
-                            getSelectableCriteria={(option) => {
-                              if (matchField) {
-                                return getSelectableCriteria(option, matchField)
-                              } else if (
-                                transformation.name === 'static' &&
-                                transformation.static_value != null &&
-                                typeof transformation.static_value === 'boolean'
-                              ) {
-                                return getSelectableCriteria(option, {
-                                  simple_type: {
-                                    type: 'boolean',
-                                    format: null
-                                  },
-                                  slug: '',
-                                  label: '',
-                                  description: ''
-                                })
-                              } else if (
-                                transformation.name === 'static' &&
-                                transformation.static_value != null
-                              ) {
-                                return getSelectableCriteria(option, {
-                                  simple_type: {
-                                    type: 'string',
-                                    format: null
-                                  },
-                                  slug: '',
-                                  label: '',
-                                  description: ''
-                                })
-                              }
-                              return undefined
-                            }}
-                            onSelect={(value) => {
-                              searchAction.onFilterSelectField(value, index)
-                            }}
-                          />
-                        </div>
+                            return false
+                          }}
+                          getSelectableCriteria={(option) => {
+                            if (matchField) {
+                              return getSelectableCriteria(option, matchField)
+                            } else if (
+                              transformation.name === 'static' &&
+                              transformation.static_value != null &&
+                              typeof transformation.static_value === 'boolean'
+                            ) {
+                              return getSelectableCriteria(option, {
+                                simple_type: {
+                                  type: 'boolean',
+                                  format: null
+                                },
+                                slug: '',
+                                label: '',
+                                description: ''
+                              })
+                            } else if (
+                              transformation.name === 'static' &&
+                              transformation.static_value != null
+                            ) {
+                              return getSelectableCriteria(option, {
+                                simple_type: {
+                                  type: 'string',
+                                  format: null
+                                },
+                                slug: '',
+                                label: '',
+                                description: ''
+                              })
+                            }
+                            return undefined
+                          }}
+                          onSelect={(value) => {
+                            searchAction.onFilterSelectField(value, index)
+                          }}
+                        />
                       </div>
-                    ) : null}
+                    </div>
                   </div>
                   <Tooltip text={`Remove filter`}>
                     <Trash

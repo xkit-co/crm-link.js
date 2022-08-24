@@ -27,7 +27,7 @@ const CheckBox: FC<CheckBoxProps> = ({
         'checked:bg-check-box',
         'focus:outline-none',
         'transition',
-        disabled ? '' : 'cursor-pointer',
+        disabled ? 'cursor-default' : 'cursor-pointer',
         disabled ? 'bg-neutral-200' : 'bg-white',
         disabled ? 'checked:bg-sky-300' : 'checked:bg-sky-600',
         disabled ? 'checked:border-sky-300' : 'checked:border-sky-600'
