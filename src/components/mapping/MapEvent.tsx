@@ -278,7 +278,9 @@ const MapEvent: FC<MapEventProps> = ({
                         ? { value: undefined, static: false }
                         : {
                             value: `${transformation.static_value}`,
-                            static: true
+                            static: selectedOption?.selector?.enum
+                              ? false
+                              : true
                           }
                     }
                     allowFiltering={true}
@@ -287,7 +289,15 @@ const MapEvent: FC<MapEventProps> = ({
                     isSelectedStaticBoolean={
                       typeof transformation.static_value === 'boolean'
                     }
-                    options={[]}
+                    options={
+                      selectedOption?.selector?.enum
+                        ? selectedOption.selector.enum.map((picklistItem) => ({
+                            label: picklistItem.label,
+                            value: picklistItem.value,
+                            subLabel: 'static string'
+                          }))
+                        : []
+                    }
                     onSelect={(value, type, staticBool) => {
                       if (staticBool) {
                         if (value === 'true') {

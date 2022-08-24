@@ -52,6 +52,10 @@ export interface Selector {
   type_label: string
   input_types: InputType[]
   children?: Selector[]
+  enum?: Array<{
+    label: string
+    value: string
+  }>
 }
 
 export interface APIObject {
