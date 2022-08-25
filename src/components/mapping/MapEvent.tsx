@@ -217,6 +217,7 @@ const MapEvent: FC<MapEventProps> = ({
               options,
               transformation.source_pointer
             )
+            const staticDataSelectionDisabled = selectedOption ? false : true
             const needsBooleanValue = selectedOption
               ? isSelectableCriteria(selectedOption, {
                   simple_type: {
@@ -272,6 +273,7 @@ const MapEvent: FC<MapEventProps> = ({
                 </div>
                 <div className='w-[120px]'>
                   <ComboBox
+                    disabled={staticDataSelectionDisabled}
                     placeholder='Static data'
                     selected={
                       transformation.static_value == null
@@ -362,7 +364,7 @@ const MapEvent: FC<MapEventProps> = ({
                   }
                 }
               }
-              const disabled =
+              const fieldSelectionDisabled =
                 transformation.criteria_operator &&
                 (transformation.static_value != null ||
                   transformation.field?.slug)
@@ -455,8 +457,8 @@ const MapEvent: FC<MapEventProps> = ({
                       <div className='text-sm w-[70px]'>Field</div>
                       <div className='w-[150px]'>
                         <ComboBox
-                          disabled={disabled}
-                          placeholder={disabled ? '' : 'Select field'}
+                          disabled={fieldSelectionDisabled}
+                          placeholder='Select field'
                           selected={{
                             value: transformation.source_pointer,
                             static: false
