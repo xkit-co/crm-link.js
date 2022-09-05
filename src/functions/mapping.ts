@@ -622,6 +622,10 @@ export const isMatch = (search: string, text: string): boolean => {
   // The logic here decides if an entry is a match for showing as a suggested mapping
   const term = search.split(' ').join('').toLowerCase()
   const option = text.split(' ').join('').toLowerCase()
+  // If either argument's label is empty, bail out as not a match
+  if (!term || !option) {
+    return false
+  }
   // Check for a direct match
   if (term === option) {
     return true
