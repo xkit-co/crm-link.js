@@ -297,7 +297,7 @@ export const selectorsToOptions = (
   return selectors
     .map((selector) => {
       const option: Option = {
-        label: selector.label,
+        label: selector.label ?? '',
         subLabel: selector.type_label,
         value: selector.pointer,
         selector: selector
@@ -307,7 +307,7 @@ export const selectorsToOptions = (
       }
       if (field) {
         option.match =
-          isMatch(field.label, selector.label) &&
+          isMatch(field.label, selector.label ?? '') &&
           isSelectableCriteria(option, field)
       }
       return option

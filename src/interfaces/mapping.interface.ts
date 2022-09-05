@@ -47,7 +47,7 @@ export interface InputType {
 }
 
 export interface Selector {
-  label: string
+  label?: string
   pointer: string
   type_label: string
   input_types: InputType[]
