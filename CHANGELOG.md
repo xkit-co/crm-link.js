@@ -1,3 +1,7 @@
+## 2.10.2
+
+- Fixes to enable selecting fields of `array` type
+
 ## 2.10.1
 
 - Show picklist values while updating or creating fields with static data
