@@ -119,6 +119,8 @@ const MapRead: FC<MapReadProps> = ({
                           case 'static':
                             transformation.static_value = value
                             break
+                          case 'empty':
+                            break
                           case 'date':
                           case 'direct':
                           default:
