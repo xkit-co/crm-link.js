@@ -385,7 +385,11 @@ const ComboBox: FC<ComboBoxProps> = ({
               .map((option) => (
                 <OptionItem
                   option={option}
-                  selected={selected.static ? undefined : selected.value}
+                  selected={
+                    selected.static || isSelectedEmpty
+                      ? undefined
+                      : selected.value
+                  }
                   onSelect={onSelect}
                   close={() => {
                     setVisible(false)
