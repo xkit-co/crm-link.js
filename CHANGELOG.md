@@ -1,3 +1,7 @@
+## 2.10.2
+
+- Fix to not pass source_pointer for `empty` transformations
+
 ## 2.10.1
 
 - Show picklist values while updating or creating fields with static data
