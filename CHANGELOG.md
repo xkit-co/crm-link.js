@@ -1,4 +1,8 @@
-## 2.10.1
+### 2.10.2
+
+- Show option to opt-out from mapping entire object
+
+### 2.10.1
 
 - Show picklist values while updating or creating fields with static data
 
