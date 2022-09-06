@@ -1,3 +1,7 @@
+## 2.10.3
+
+- Fixes to enable selecting fields of `array` type
+
 ## 2.10.2
 
 - Fix to not pass source_pointer for `empty` transformations
