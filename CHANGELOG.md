@@ -1,4 +1,4 @@
-### 2.10.2
+### 2.10.3
 
 - Show option to opt-out from mapping entire object
 
