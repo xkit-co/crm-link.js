@@ -4,6 +4,10 @@
 
 ![Preview](https://user-images.githubusercontent.com/110259385/188629778-e09c32ea-8c97-4685-87c0-3bdf7759d02f.gif)
 
+### 2.10.2
+
+- Fix to not pass source_pointer for `empty` transformations
+
 ### 2.10.1
 
 - Show picklist values while updating or creating fields with static data
