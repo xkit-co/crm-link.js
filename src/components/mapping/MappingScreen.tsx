@@ -143,7 +143,8 @@ const MappingScreen: FC<MappingScreenProps> = ({
             if (
               objectMappings.find(
                 (objectMapping) =>
-                  objectMapping.crm_object_id === developerObjects[index].id
+                  objectMapping.crm_object_id === developerObjects[index].id &&
+                  objectMapping.api_object_id != null
               )
             ) {
               setCurrentStage(MappingStages.Mappings)
@@ -214,6 +215,22 @@ const MappingScreen: FC<MappingScreenProps> = ({
                   setObjectMappings
                 )
                 setCurrentStage(MappingStages.Mappings)
+              }}
+              onOptOutObjectSelect={() => {
+                const newObjectMapping = {
+                  crm_object_id:
+                    developerObjects[currentDeveloperObjectIndex].id,
+                  api_object_id: null,
+                  transformations: [],
+                  event_actions: []
+                }
+                setCurrentObjectMapping(newObjectMapping)
+                updateMapping(
+                  newObjectMapping,
+                  objectMappings,
+                  setObjectMappings
+                )
+                setCurrentStage(MappingStages.Configuration)
               }}
             />
             {removeBranding ? null : (
