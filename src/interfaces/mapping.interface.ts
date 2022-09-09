@@ -78,7 +78,7 @@ export interface Transformation {
 
 export interface ObjectMapping {
   crm_object_id: number
-  api_object_id: number
+  api_object_id: number | null
   transformations: Transformation[]
   event_actions: Array<{
     event: {

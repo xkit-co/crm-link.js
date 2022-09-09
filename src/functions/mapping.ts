@@ -24,8 +24,7 @@ export const updateMapping = (
 ) => {
   const existingMappingIndex = objectMappings.findIndex(
     (objectMapping) =>
-      objectMapping.crm_object_id === currentObjectMapping.crm_object_id &&
-      objectMapping.api_object_id === currentObjectMapping.api_object_id
+      objectMapping.crm_object_id === currentObjectMapping.crm_object_id
   )
   if (existingMappingIndex > -1) {
     const clonedObjectMappings = [...objectMappings]
@@ -43,8 +42,7 @@ export const removeMapping = (
 ) => {
   const existingMappingIndex = objectMappings.findIndex(
     (objectMapping) =>
-      objectMapping.crm_object_id === currentObjectMapping.crm_object_id &&
-      objectMapping.api_object_id === currentObjectMapping.api_object_id
+      objectMapping.crm_object_id === currentObjectMapping.crm_object_id
   )
   if (existingMappingIndex > -1) {
     const clonedObjectMappings = [...objectMappings]
@@ -245,6 +243,11 @@ export const isObjectSelected = (
   for (const objectMapping of objectMappings) {
     if (objectMapping.crm_object_id === developerObject.id) {
       mappingExistsForDeveloperObject = true
+      // Check if user has opted out, in which case it's a valid selection
+      if (objectMapping.api_object_id == null) {
+        return true
+      }
+      // Otherwise, make sure all fields and events are adequately filled out
       if (
         !(
           isAllFieldsSelected(developerObject, objectMapping.transformations) &&

@@ -14,13 +14,15 @@ interface MapObjectProps {
   developerObject: CRMObject
   objectMappings: ObjectMapping[]
   onObjectSelect: (userObject: APIObject) => void
+  onOptOutObjectSelect: () => void
 }
 
 const MapObject: FC<MapObjectProps> = ({
   userObjects,
   developerObject,
   objectMappings,
-  onObjectSelect
+  onObjectSelect,
+  onOptOutObjectSelect
 }) => {
   const [filteredUserObjects, setFilteredUserObjects] =
     useState<APIObject[]>(userObjects)
@@ -46,6 +48,28 @@ const MapObject: FC<MapObjectProps> = ({
         </div>
       </div>
       <div className='grow border-b border-t border-l-0 border-r-0 border-solid border-neutral-200 overflow-y-auto'>
+        <div
+          className={[
+            'border-b',
+            'border-t-0',
+            'border-l-0',
+            'border-r-0',
+            'border-solid',
+            'border-neutral-200',
+            'hover:bg-black/5',
+            'cursor-pointer',
+            'bg-white'
+          ]
+            .join(' ')
+            .trim()}
+          onClick={() => {
+            onOptOutObjectSelect()
+          }}
+        >
+          <div className='px-6 py-2.5 flex items-center justify-between'>
+            <div className='break-words'>{`Don't map any object`}</div>
+          </div>
+        </div>
         {filteredUserObjects
           .sort((objectA, objectB) => {
             const objectAHasMatch =
