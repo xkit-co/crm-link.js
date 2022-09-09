@@ -300,7 +300,7 @@ export const selectorsToOptions = (
   return selectors
     .map((selector) => {
       const option: Option = {
-        label: selector.label,
+        label: selector.label ?? '',
         subLabel: selector.type_label,
         value: selector.pointer,
         selector: selector
@@ -310,7 +310,7 @@ export const selectorsToOptions = (
       }
       if (field) {
         option.match =
-          isMatch(field.label, selector.label) &&
+          isMatch(field.label, selector.label ?? '') &&
           isSelectableCriteria(option, field)
       }
       return option
@@ -625,6 +625,10 @@ export const isMatch = (search: string, text: string): boolean => {
   // The logic here decides if an entry is a match for showing as a suggested mapping
   const term = search.split(' ').join('').toLowerCase()
   const option = text.split(' ').join('').toLowerCase()
+  // If either argument's label is empty, bail out as not a match
+  if (!term || !option) {
+    return false
+  }
   // Check for a direct match
   if (term === option) {
     return true

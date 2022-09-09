@@ -1,8 +1,12 @@
-### 2.10.3
+### 2.10.4
 
 - Show option to opt-out from mapping entire object
 
 ![Preview](https://user-images.githubusercontent.com/110259385/188629778-e09c32ea-8c97-4685-87c0-3bdf7759d02f.gif)
+
+### 2.10.3
+
+- Fixes to enable selecting fields of `array` type
 
 ### 2.10.2
 
