@@ -233,7 +233,7 @@ const MapField: FC<MapFieldProps> = ({
       )}
       {field.simple_type.type === 'object' &&
       !isNestedField && // Without this condition, user will be able to create nested fields inside nested fields indefinitely.
-      !selected.value ? (
+      existingFieldIndex === -1 ? (
         <div className='pl-6'>
           {nestedFields.length ? null : (
             <div className='pt-4 text-xs text-neutral-500'>
