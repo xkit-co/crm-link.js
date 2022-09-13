@@ -4,6 +4,7 @@ import Button from '../Button'
 import Rotate from '../icons/Rotate'
 import Trash from '../icons/Trash'
 import Pill from '../Pill'
+import Tooltip from '../Tooltip'
 import XkitBranding from '../XkitBranding'
 
 interface MapConnectionProps {
@@ -26,6 +27,24 @@ const MapConnection: FC<MapConnectionProps> = ({
     connection.enabled &&
     connection.authorization &&
     connection.authorization.status === 'active'
+
+  const doneButton = (
+    <Button
+      text='Done'
+      type={isActive ? 'primary' : 'disabled'}
+      onClick={() => {
+        if (isActive) {
+          onDone()
+        }
+      }}
+    />
+  )
+  let doneButtonWithTooltip = doneButton
+  if (!isActive) {
+    doneButtonWithTooltip = (
+      <Tooltip text={`Mapping needs to be completed`}>{doneButton}</Tooltip>
+    )
+  }
 
   return (
     <div className='flex flex-col h-[calc(100%-40px)]'>
@@ -87,17 +106,7 @@ const MapConnection: FC<MapConnectionProps> = ({
             )}
           </div>
         </div>
-        <div className='px-6 pt-6 pb-4'>
-          <Button
-            text='Done'
-            type={isActive ? 'primary' : 'disabled'}
-            onClick={() => {
-              if (isActive) {
-                onDone()
-              }
-            }}
-          />
-        </div>
+        <div className='px-6 pt-6 pb-4'>{doneButtonWithTooltip}</div>
         {removeBranding ? null : <XkitBranding />}
       </div>
     </div>

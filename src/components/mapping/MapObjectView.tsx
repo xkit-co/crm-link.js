@@ -53,6 +53,26 @@ const MapObjectView: FC<MapObjectViewProps> = ({
   removeBranding
 }) => {
   const [loading, setLoading] = useState<boolean>(false)
+
+  const isMappingComplete = isObjectSelected(developerObject, objectMappings)
+  const doneButton = (
+    <Button
+      text='Done'
+      type={!loading && isMappingComplete ? 'primary' : 'disabled'}
+      onClick={() => {
+        if (!loading && isMappingComplete) {
+          onDone()
+        }
+      }}
+    />
+  )
+  let doneButtonWithTooltip = doneButton
+  if (!isMappingComplete) {
+    doneButtonWithTooltip = (
+      <Tooltip text={`Mapping needs to be completed`}>{doneButton}</Tooltip>
+    )
+  }
+
   return (
     <div className='flex flex-col h-[calc(100%-40px)]'>
       <div className='text-sm pt-2.5 pb-4 px-6'>
@@ -238,24 +258,7 @@ const MapObjectView: FC<MapObjectViewProps> = ({
               }
             })}
         </div>
-        <div className='px-6 pt-6 pb-4'>
-          <Button
-            text='Done'
-            type={
-              !loading && isObjectSelected(developerObject, objectMappings)
-                ? 'primary'
-                : 'disabled'
-            }
-            onClick={() => {
-              if (
-                !loading &&
-                isObjectSelected(developerObject, objectMappings)
-              ) {
-                onDone()
-              }
-            }}
-          />
-        </div>
+        <div className='px-6 pt-6 pb-4'>{doneButtonWithTooltip}</div>
         {removeBranding ? null : <XkitBranding />}
       </div>
     </div>

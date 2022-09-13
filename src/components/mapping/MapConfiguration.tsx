@@ -37,6 +37,52 @@ const MapConfiguration: FC<MapConfigurationProps> = ({
   removeBranding
 }) => {
   const [submitting, setSubmitting] = useState<boolean>(false)
+
+  const activeConnection =
+    connection.enabled &&
+    connection.authorization &&
+    connection.authorization.status === 'active'
+  const isMappingComplete = isAllObjectsSelected(
+    developerObjects,
+    objectMappings
+  )
+  const doneButton = (
+    <Button
+      text={submitting ? <Spinner className='h-4 w-4 shrink-0' /> : 'Finish'}
+      type={
+        !submitting && activeConnection && isMappingComplete
+          ? 'primary'
+          : 'disabled'
+      }
+      onClick={async () => {
+        if (!submitting && isMappingComplete) {
+          setSubmitting(true)
+          await saveMapping(
+            xkit,
+            connection,
+            developerObjects,
+            objectMappings,
+            reject
+          )
+          setSubmitting(false)
+          resolve(connection)
+        }
+      }}
+    />
+  )
+  let doneButtonWithTooltip = doneButton
+  if (!activeConnection) {
+    doneButtonWithTooltip = (
+      <Tooltip text={`Your CRM connection requires attention`}>
+        {doneButton}
+      </Tooltip>
+    )
+  } else if (!isMappingComplete) {
+    doneButtonWithTooltip = (
+      <Tooltip text={`Mapping needs to be completed`}>{doneButton}</Tooltip>
+    )
+  }
+
   return (
     <div className='flex flex-col h-[calc(100%-40px)]'>
       <div className='text-sm pt-2.5 pb-4 px-6'>Your CRM connection</div>
@@ -96,39 +142,7 @@ const MapConfiguration: FC<MapConfigurationProps> = ({
             </div>
           ))}
         </div>
-        <div className='px-6 pt-6 pb-4'>
-          <Button
-            text={
-              submitting ? <Spinner className='h-4 w-4 shrink-0' /> : 'Finish'
-            }
-            type={
-              !submitting &&
-              connection.enabled &&
-              connection.authorization &&
-              connection.authorization.status === 'active' &&
-              isAllObjectsSelected(developerObjects, objectMappings)
-                ? 'primary'
-                : 'disabled'
-            }
-            onClick={async () => {
-              if (
-                !submitting &&
-                isAllObjectsSelected(developerObjects, objectMappings)
-              ) {
-                setSubmitting(true)
-                await saveMapping(
-                  xkit,
-                  connection,
-                  developerObjects,
-                  objectMappings,
-                  reject
-                )
-                setSubmitting(false)
-                resolve(connection)
-              }
-            }}
-          />
-        </div>
+        <div className='px-6 pt-6 pb-4'>{doneButtonWithTooltip}</div>
         {removeBranding ? null : <XkitBranding />}
       </div>
     </div>

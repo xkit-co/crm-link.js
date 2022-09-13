@@ -744,3 +744,45 @@ export const defaultEventActions = (
   }
   return actions
 }
+
+export const getMissingRequiredCRMFields = (
+  userObject: APIObject,
+  objectMapping: ObjectMapping
+): { eventSlug: string; missingFieldLabel: string } | undefined => {
+  const requiredCRMFields: Selector[] = []
+  if (userObject.selector) {
+    getRequiredCRMFields([userObject.selector], requiredCRMFields)
+  }
+  for (const eventAction of objectMapping.event_actions) {
+    if (eventAction.action_type === 'create') {
+      for (const CRMField of requiredCRMFields) {
+        if (
+          !eventAction.transformations.find(
+            (transformation) =>
+              transformation.source_pointer === CRMField.pointer
+          )
+        ) {
+          return {
+            eventSlug: eventAction.event.slug,
+            missingFieldLabel: CRMField.label || CRMField.api_name || ''
+          }
+        }
+      }
+    }
+  }
+  return undefined
+}
+
+const getRequiredCRMFields = (
+  selectors: Selector[],
+  requiredCRMFields: Selector[]
+) => {
+  for (const selector of selectors) {
+    if (selector.required) {
+      requiredCRMFields.push(selector)
+    }
+    if (selector.children) {
+      getRequiredCRMFields(selector.children, requiredCRMFields)
+    }
+  }
+}

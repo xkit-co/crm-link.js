@@ -1,5 +1,6 @@
 import React, { FC } from 'react'
 import {
+  getMissingRequiredCRMFields,
   getTransformationIndex,
   isWriteSelected,
   updateMapping
@@ -13,6 +14,7 @@ import {
 } from '../../interfaces/mapping.interface'
 import { xkitBrowserWindow } from '../../interfaces/window.interface'
 import Button from '../Button'
+import Tooltip from '../Tooltip'
 import XkitBranding from '../XkitBranding'
 import MapEvent from './MapEvent'
 
@@ -231,45 +233,69 @@ const MapWrite: FC<MapWriteProps> = ({
   setObjectMappings,
   setCurrentObjectMapping,
   setCurrentStage
-}) => (
-  <div className='flex flex-col h-[calc(100%-40px)]'>
-    <div className='text-sm pt-2.5 pb-4 px-6'>
-      Configure how {currentUserObject.label_many} are created, updated or
-      deleted by {platformName}
-    </div>
-    <div className='pb-2.5 flex flex-col grow overflow-y-auto'>
-      <div className='grow'>
-        <MapEventsByType
-          types={['create', 'update', 'delete']}
-          currentDeveloperObject={currentDeveloperObject}
-          currentUserObject={currentUserObject}
-          currentObjectMapping={currentObjectMapping}
-          setCurrentObjectMapping={setCurrentObjectMapping}
-        />
+}) => {
+  const isMappingComplete = isWriteSelected(
+    currentDeveloperObject,
+    currentObjectMapping
+  )
+  const missingRequiredField = getMissingRequiredCRMFields(
+    currentUserObject,
+    currentObjectMapping
+  )
+
+  const doneButton = (
+    <Button
+      text='Done'
+      type={isMappingComplete && !missingRequiredField ? 'primary' : 'disabled'}
+      onClick={() => {
+        if (isMappingComplete && !missingRequiredField) {
+          updateMapping(currentObjectMapping, objectMappings, setObjectMappings)
+          setCurrentStage(MappingStages.Mappings)
+        }
+      }}
+    />
+  )
+  let doneButtonWithTooltip = doneButton
+  if (!isMappingComplete) {
+    doneButtonWithTooltip = (
+      <Tooltip text={`Mapping needs to be completed`}>{doneButton}</Tooltip>
+    )
+  } else if (missingRequiredField) {
+    const eventLabel = currentDeveloperObject.events?.find(
+      (event) => event.slug === missingRequiredField.eventSlug
+    )
+    if (eventLabel) {
+      doneButtonWithTooltip = (
+        <Tooltip
+          text={`${eventLabel}: Field '${missingRequiredField.missingFieldLabel}' from ${currentDeveloperObject.label} in your CRM must be mapped`}
+        >
+          {doneButton}
+        </Tooltip>
+      )
+    }
+  }
+
+  return (
+    <div className='flex flex-col h-[calc(100%-40px)]'>
+      <div className='text-sm pt-2.5 pb-4 px-6'>
+        Configure how {currentUserObject.label_many} are created, updated or
+        deleted by {platformName}
       </div>
-      <div className='px-6 pt-6 pb-4'>
-        <Button
-          text='Done'
-          type={
-            isWriteSelected(currentDeveloperObject, currentObjectMapping)
-              ? 'primary'
-              : 'disabled'
-          }
-          onClick={() => {
-            if (isWriteSelected(currentDeveloperObject, currentObjectMapping)) {
-              updateMapping(
-                currentObjectMapping,
-                objectMappings,
-                setObjectMappings
-              )
-              setCurrentStage(MappingStages.Mappings)
-            }
-          }}
-        />
+      <div className='pb-2.5 flex flex-col grow overflow-y-auto'>
+        <div className='grow'>
+          <MapEventsByType
+            types={['create', 'update', 'delete']}
+            currentDeveloperObject={currentDeveloperObject}
+            currentUserObject={currentUserObject}
+            currentObjectMapping={currentObjectMapping}
+            setCurrentObjectMapping={setCurrentObjectMapping}
+          />
+        </div>
+        <div className='px-6 pt-6 pb-4'>{doneButtonWithTooltip}</div>
+        {removeBranding ? null : <XkitBranding />}
       </div>
-      {removeBranding ? null : <XkitBranding />}
     </div>
-  </div>
-)
+  )
+}
 
 export default MapWrite
