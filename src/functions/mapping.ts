@@ -10,6 +10,7 @@ import {
   InputType,
   ObjectMapping,
   Selector,
+  SelectorOperation,
   Transformation
 } from '../interfaces/mapping.interface'
 import { xkitBrowserWindow } from '../interfaces/window.interface'
@@ -295,6 +296,7 @@ const doesOptionHaveMatch = (option: Option): boolean => {
 
 export const selectorsToOptions = (
   selectors: Selector[],
+  operation: SelectorOperation,
   field?: CRMObjectField
 ): Option[] => {
   return selectors
@@ -309,13 +311,17 @@ export const selectorsToOptions = (
         option.description = selector.api_name
       }
       if (selector.children && selector.children.length) {
-        option.children = selectorsToOptions(selector.children, field)
+        option.children = selectorsToOptions(
+          selector.children,
+          operation,
+          field
+        )
       }
       if (field) {
         option.match =
           (isMatch(field.label, selector.label ?? '') ||
             isMatch(field.label, selector.api_name ?? '')) &&
-          isSelectableCriteria(option, field)
+          isSelectableCriteria(option, field, operation)
       }
       return option
     })
@@ -339,9 +345,13 @@ export const supportedTransformations = ['direct', 'date']
 
 export const getSelectableCriteria = (
   option: Option,
-  field: CRMObjectField
+  field: CRMObjectField,
+  operation: SelectorOperation
 ): InputType | undefined => {
   if (!option.selector) {
+    return undefined
+  }
+  if (!isOperationAllowed(option.selector, operation)) {
     return undefined
   }
   for (const criteria of option.selector.input_types) {
@@ -361,10 +371,44 @@ export const getSelectableCriteria = (
 
 export const isSelectableCriteria = (
   option: Option,
-  field: CRMObjectField
+  field: CRMObjectField,
+  operation: SelectorOperation
 ): boolean => {
-  if (getSelectableCriteria(option, field)) {
+  if (getSelectableCriteria(option, field, operation)) {
     return true
+  }
+  return false
+}
+
+const isOperationAllowed = (
+  selector: Selector,
+  operation: SelectorOperation
+): boolean => {
+  switch (operation) {
+    case SelectorOperation.None:
+      return true
+    case SelectorOperation.Read:
+      if (selector.read_for_mapping) {
+        return true
+      }
+      break
+    case SelectorOperation.Create:
+      if (selector.write_on_create) {
+        return true
+      }
+      break
+    case SelectorOperation.Update:
+      if (selector.write_on_update) {
+        return true
+      }
+      break
+    case SelectorOperation.Filter:
+      if (selector.filterable) {
+        return true
+      }
+      break
+    default:
+      return false
   }
   return false
 }

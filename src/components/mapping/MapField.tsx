@@ -10,7 +10,8 @@ import {
 import {
   APIObject,
   CRMObjectField,
-  ObjectMapping
+  ObjectMapping,
+  SelectorOperation
 } from '../../interfaces/mapping.interface'
 import CheckBox from '../CheckBox'
 import ComboBox from '../ComboBox'
@@ -86,12 +87,19 @@ const MapField: FC<MapFieldProps> = ({
   if (selected.value && !selected.static) {
     const option = currentUserObject.selector
       ? findSelectedOption(
-          selectorsToOptions([currentUserObject.selector]),
+          selectorsToOptions(
+            [currentUserObject.selector],
+            SelectorOperation.Read
+          ),
           selected.value
         )
       : undefined
     if (option) {
-      const selectableCriteria = getSelectableCriteria(option, field)
+      const selectableCriteria = getSelectableCriteria(
+        option,
+        field,
+        SelectorOperation.Read
+      )
       if (
         selectableCriteria &&
         selectableCriteria.transformations.includes('date')
@@ -189,7 +197,11 @@ const MapField: FC<MapFieldProps> = ({
             selected={selected}
             options={
               currentUserObject.selector
-                ? selectorsToOptions([currentUserObject.selector], field)
+                ? selectorsToOptions(
+                    [currentUserObject.selector],
+                    SelectorOperation.Read,
+                    field
+                  )
                 : []
             }
             allowFiltering={true}
@@ -208,10 +220,14 @@ const MapField: FC<MapFieldProps> = ({
                 'empty'
             }
             criteria={(option) => {
-              return isSelectableCriteria(option, field)
+              return isSelectableCriteria(option, field, SelectorOperation.Read)
             }}
             getSelectableCriteria={(option) => {
-              return getSelectableCriteria(option, field)
+              return getSelectableCriteria(
+                option,
+                field,
+                SelectorOperation.Read
+              )
             }}
             onSelect={(value, type, staticBool) => {
               if (type === 'static' && staticBool) {

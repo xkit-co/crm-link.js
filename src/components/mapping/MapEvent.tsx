@@ -11,7 +11,8 @@ import {
   APIObject,
   CRMObjectEvent,
   CRMObjectField,
-  ObjectMapping
+  ObjectMapping,
+  SelectorOperation
 } from '../../interfaces/mapping.interface'
 import Accordion from '../Accordion'
 import Button from '../Button'
@@ -67,6 +68,18 @@ const MapEvent: FC<MapEventProps> = ({
     existingEventIndex > -1
       ? currentObjectMapping.event_actions[existingEventIndex].action_type
       : undefined
+  let operation = SelectorOperation.None
+  switch (selectedActionType) {
+    case 'create':
+      operation = SelectorOperation.Create
+      break
+    case 'update':
+      operation = SelectorOperation.Update
+      break
+    case 'search':
+      operation = SelectorOperation.Filter
+      break
+  }
 
   let eventHandlingForm = null
   switch (selectedActionType) {
@@ -122,12 +135,16 @@ const MapEvent: FC<MapEventProps> = ({
             if (selectedValue) {
               const option = currentUserObject.selector
                 ? findSelectedOption(
-                    selectorsToOptions([currentUserObject.selector]),
+                    selectorsToOptions([currentUserObject.selector], operation),
                     selectedValue
                   )
                 : undefined
               if (option) {
-                const selectableCriteria = getSelectableCriteria(option, field)
+                const selectableCriteria = getSelectableCriteria(
+                  option,
+                  field,
+                  operation
+                )
                 if (
                   selectableCriteria &&
                   selectableCriteria.transformations.includes('date')
@@ -180,14 +197,18 @@ const MapEvent: FC<MapEventProps> = ({
                   isSelectedEmpty={isSelectedEmpty}
                   options={
                     currentUserObject.selector
-                      ? selectorsToOptions([currentUserObject.selector], field)
+                      ? selectorsToOptions(
+                          [currentUserObject.selector],
+                          operation,
+                          field
+                        )
                       : []
                   }
                   criteria={(option) => {
-                    return isSelectableCriteria(option, field)
+                    return isSelectableCriteria(option, field, operation)
                   }}
                   getSelectableCriteria={(option) => {
-                    return getSelectableCriteria(option, field)
+                    return getSelectableCriteria(option, field, operation)
                   }}
                   onSelect={(value, type) => {
                     updateAction.onPayloadFieldSelect(
@@ -211,7 +232,7 @@ const MapEvent: FC<MapEventProps> = ({
           </div>
           {userDefinedTransformations.map(({ transformation, index }) => {
             const options = currentUserObject.selector
-              ? selectorsToOptions([currentUserObject.selector])
+              ? selectorsToOptions([currentUserObject.selector], operation)
               : []
             const selectedOption = findSelectedOption(
               options,
@@ -219,15 +240,19 @@ const MapEvent: FC<MapEventProps> = ({
             )
             const staticDataSelectionDisabled = selectedOption ? false : true
             const needsBooleanValue = selectedOption
-              ? isSelectableCriteria(selectedOption, {
-                  simple_type: {
-                    type: 'boolean',
-                    format: null
+              ? isSelectableCriteria(
+                  selectedOption,
+                  {
+                    simple_type: {
+                      type: 'boolean',
+                      format: null
+                    },
+                    slug: '',
+                    label: '',
+                    description: ''
                   },
-                  slug: '',
-                  label: '',
-                  description: ''
-                })
+                  operation
+                )
               : false
             return (
               <div
@@ -246,24 +271,32 @@ const MapEvent: FC<MapEventProps> = ({
                     criteria={(option) => {
                       // We are okay with any field that can transform to a plain string or boolean
                       return (
-                        isSelectableCriteria(option, {
-                          simple_type: {
-                            type: 'string',
-                            format: null
+                        isSelectableCriteria(
+                          option,
+                          {
+                            simple_type: {
+                              type: 'string',
+                              format: null
+                            },
+                            slug: '',
+                            label: '',
+                            description: ''
                           },
-                          slug: '',
-                          label: '',
-                          description: ''
-                        }) ||
-                        isSelectableCriteria(option, {
-                          simple_type: {
-                            type: 'boolean',
-                            format: null
+                          operation
+                        ) ||
+                        isSelectableCriteria(
+                          option,
+                          {
+                            simple_type: {
+                              type: 'boolean',
+                              format: null
+                            },
+                            slug: '',
+                            label: '',
+                            description: ''
                           },
-                          slug: '',
-                          label: '',
-                          description: ''
-                        })
+                          operation
+                        )
                       )
                     }}
                     onSelect={(value) => {
@@ -468,73 +501,98 @@ const MapEvent: FC<MapEventProps> = ({
                             currentUserObject.selector
                               ? selectorsToOptions(
                                   [currentUserObject.selector],
+                                  operation,
                                   matchField
                                 )
                               : []
                           }
                           criteria={(option) => {
                             if (matchField) {
-                              return isSelectableCriteria(option, matchField)
+                              return isSelectableCriteria(
+                                option,
+                                matchField,
+                                operation
+                              )
                             } else if (
                               transformation.name === 'static' &&
                               transformation.static_value != null &&
                               typeof transformation.static_value === 'boolean'
                             ) {
-                              return isSelectableCriteria(option, {
-                                simple_type: {
-                                  type: 'boolean',
-                                  format: null
+                              return isSelectableCriteria(
+                                option,
+                                {
+                                  simple_type: {
+                                    type: 'boolean',
+                                    format: null
+                                  },
+                                  slug: '',
+                                  label: '',
+                                  description: ''
                                 },
-                                slug: '',
-                                label: '',
-                                description: ''
-                              })
+                                operation
+                              )
                             } else if (
                               transformation.name === 'static' &&
                               transformation.static_value != null
                             ) {
-                              return isSelectableCriteria(option, {
-                                simple_type: {
-                                  type: 'string',
-                                  format: null
+                              return isSelectableCriteria(
+                                option,
+                                {
+                                  simple_type: {
+                                    type: 'string',
+                                    format: null
+                                  },
+                                  slug: '',
+                                  label: '',
+                                  description: ''
                                 },
-                                slug: '',
-                                label: '',
-                                description: ''
-                              })
+                                operation
+                              )
                             }
                             return false
                           }}
                           getSelectableCriteria={(option) => {
                             if (matchField) {
-                              return getSelectableCriteria(option, matchField)
+                              return getSelectableCriteria(
+                                option,
+                                matchField,
+                                operation
+                              )
                             } else if (
                               transformation.name === 'static' &&
                               transformation.static_value != null &&
                               typeof transformation.static_value === 'boolean'
                             ) {
-                              return getSelectableCriteria(option, {
-                                simple_type: {
-                                  type: 'boolean',
-                                  format: null
+                              return getSelectableCriteria(
+                                option,
+                                {
+                                  simple_type: {
+                                    type: 'boolean',
+                                    format: null
+                                  },
+                                  slug: '',
+                                  label: '',
+                                  description: ''
                                 },
-                                slug: '',
-                                label: '',
-                                description: ''
-                              })
+                                operation
+                              )
                             } else if (
                               transformation.name === 'static' &&
                               transformation.static_value != null
                             ) {
-                              return getSelectableCriteria(option, {
-                                simple_type: {
-                                  type: 'string',
-                                  format: null
+                              return getSelectableCriteria(
+                                option,
+                                {
+                                  simple_type: {
+                                    type: 'string',
+                                    format: null
+                                  },
+                                  slug: '',
+                                  label: '',
+                                  description: ''
                                 },
-                                slug: '',
-                                label: '',
-                                description: ''
-                              })
+                                operation
+                              )
                             }
                             return undefined
                           }}

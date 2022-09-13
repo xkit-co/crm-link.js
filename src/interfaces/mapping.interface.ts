@@ -57,6 +57,11 @@ export interface Selector {
     label: string
     value: string
   }>
+  read_for_mapping: boolean
+  write_on_create: boolean
+  write_on_update: boolean
+  required: boolean
+  filterable: boolean
 }
 
 export interface APIObject {
@@ -88,4 +93,12 @@ export interface ObjectMapping {
     action_type: string
     transformations: Transformation[]
   }>
+}
+
+export enum SelectorOperation {
+  None,
+  Read,
+  Create,
+  Update,
+  Filter
 }
