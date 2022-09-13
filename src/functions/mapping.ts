@@ -305,12 +305,16 @@ export const selectorsToOptions = (
         value: selector.pointer,
         selector: selector
       }
+      if (selector.api_name && selector.api_name !== selector.label) {
+        option.description = selector.api_name
+      }
       if (selector.children && selector.children.length) {
         option.children = selectorsToOptions(selector.children, field)
       }
       if (field) {
         option.match =
-          isMatch(field.label, selector.label ?? '') &&
+          (isMatch(field.label, selector.label ?? '') ||
+            isMatch(field.label, selector.api_name ?? '')) &&
           isSelectableCriteria(option, field)
       }
       return option

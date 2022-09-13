@@ -46,6 +46,7 @@ export interface Option {
   selector?: Selector
   children?: Option[]
   match?: boolean
+  description?: string
 }
 
 interface ComboBoxProps {
@@ -526,18 +527,33 @@ const OptionItem: FC<OptionItemProps> = ({
         }}
       >
         {expandButton}
-        <div
-          className={['whitespace-nowrap', disabled ? 'text-neutral-400' : '']
-            .join(' ')
-            .trim()}
-        >
-          {option.label}
+        <div className='flex flex-col'>
+          <div
+            className={['whitespace-nowrap', disabled ? 'text-neutral-400' : '']
+              .join(' ')
+              .trim()}
+          >
+            {option.label}
+          </div>
+          {option.description ? (
+            <div
+              className={[
+                'whitespace-nowrap',
+                'text-xs',
+                disabled ? 'text-neutral-400' : 'text-neutral-500'
+              ]
+                .join(' ')
+                .trim()}
+            >
+              {option.description}
+            </div>
+          ) : null}
         </div>
         {option.subLabel ? (
           <span
             className={[
               'text-xs',
-              'pl-2',
+              'pl-4',
               disabled ? 'text-neutral-400' : 'text-neutral-500'
             ]
               .join(' ')
@@ -579,6 +595,12 @@ const OptionItem: FC<OptionItemProps> = ({
 
 const filterOption = (option: Option, filter: string): boolean => {
   if (option.label.toLowerCase().includes(filter.toLowerCase())) {
+    return true
+  }
+  if (
+    option.description &&
+    option.description.toLowerCase().includes(filter.toLowerCase())
+  ) {
     return true
   }
   if (option.children && option.children.length) {

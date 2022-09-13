@@ -1,3 +1,8 @@
+### 2.10.6
+
+- Show API names for CRM fields in dropdowns
+- Ability to search for a field in a dropdown by its API name
+
 ### 2.10.5
 
 - Fixed a bug where the UI for adding a nested field was visible even when the user opted out from mapping that field
