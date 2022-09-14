@@ -263,7 +263,7 @@ const MapWrite: FC<MapWriteProps> = ({
   } else if (missingRequiredField) {
     const eventLabel = currentDeveloperObject.events?.find(
       (event) => event.slug === missingRequiredField.eventSlug
-    )
+    )?.label
     if (eventLabel) {
       doneButtonWithTooltip = (
         <Tooltip

@@ -388,22 +388,22 @@ const isOperationAllowed = (
     case SelectorOperation.None:
       return true
     case SelectorOperation.Read:
-      if (selector.read_for_mapping) {
+      if (selector.readable) {
         return true
       }
       break
     case SelectorOperation.Create:
-      if (selector.write_on_create) {
+      if (selector.createable) {
         return true
       }
       break
     case SelectorOperation.Update:
-      if (selector.write_on_update) {
+      if (selector.updateable) {
         return true
       }
       break
     case SelectorOperation.Filter:
-      if (selector.filterable) {
+      if (selector.searchable) {
         return true
       }
       break

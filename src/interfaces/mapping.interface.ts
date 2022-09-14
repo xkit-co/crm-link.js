@@ -57,11 +57,11 @@ export interface Selector {
     label: string
     value: string
   }>
-  read_for_mapping: boolean
-  write_on_create: boolean
-  write_on_update: boolean
+  readable: boolean
+  createable: boolean
+  updateable: boolean
   required: boolean
-  filterable: boolean
+  searchable: boolean
 }
 
 export interface APIObject {
