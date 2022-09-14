@@ -1,7 +1,16 @@
+### 2.10.7
+
+- Mapping fields from the CRM are restricted by their properties of being readable, creatable, updatable and searchable in their appropriate context
+- Fields that are marked as required for creating a CRM record are mandated to be mapped for `create` actions
+
+![Preview](https://user-images.githubusercontent.com/110259385/190111678-ec330fe4-df31-4169-8624-472e11b491ef.gif)
+
 ### 2.10.6
 
 - Show API names for CRM fields in dropdowns
 - Ability to search for a field in a dropdown by its API name
+
+![Preview](https://user-images.githubusercontent.com/110259385/189930698-5ba875c1-f7ec-490e-aaf7-a039f1aeb9a2.png)
 
 ### 2.10.5
 
