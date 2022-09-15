@@ -898,7 +898,10 @@ export const applyRepeatedMapping = (
             operation = SelectorOperation.Update
           }
           const selector = findSelectorByPointer(selectors, value)
-          if (selector && isOperationAllowed(selector, operation)) {
+          if (
+            (selector && isOperationAllowed(selector, operation)) ||
+            type === 'empty'
+          ) {
             const transformation: Transformation = {
               field: { slug: repeatedField.slug },
               name: type

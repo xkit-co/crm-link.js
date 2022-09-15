@@ -2,6 +2,8 @@
 
 - When selecting a field from the CRM during data mapping, payload fields for `create`, `update` and `search` actions having the same slug and type are pre-filled with the same mapping for user convenience
 
+![Preview](https://user-images.githubusercontent.com/110259385/190391442-6ef22fbe-b737-4665-a4d8-9e2a69994800.gif)
+
 ### 2.10.7
 
 - Mapping fields from the CRM are restricted by their properties of being readable, creatable, updatable and searchable in their appropriate context
