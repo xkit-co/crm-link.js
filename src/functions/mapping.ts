@@ -748,13 +748,14 @@ export const defaultEventActions = (
 export const getMissingRequiredCRMFields = (
   userObject: APIObject,
   objectMapping: ObjectMapping
-): { eventSlug: string; missingFieldLabel: string } | undefined => {
+): { eventSlug: string; missingFieldLabels: string[] } | undefined => {
   const requiredCRMFields: Selector[] = []
   if (userObject.selector) {
     getRequiredCRMFields([userObject.selector], requiredCRMFields)
   }
   for (const eventAction of objectMapping.event_actions) {
     if (eventAction.action_type === 'create') {
+      const missingFieldLabels = []
       for (const CRMField of requiredCRMFields) {
         if (
           !eventAction.transformations.find(
@@ -762,10 +763,13 @@ export const getMissingRequiredCRMFields = (
               transformation.source_pointer === CRMField.pointer
           )
         ) {
-          return {
-            eventSlug: eventAction.event.slug,
-            missingFieldLabel: CRMField.label || CRMField.api_name || ''
-          }
+          missingFieldLabels.push(CRMField.label || CRMField.api_name || '')
+        }
+      }
+      if (missingFieldLabels.length) {
+        return {
+          eventSlug: eventAction.event.slug,
+          missingFieldLabels
         }
       }
     }

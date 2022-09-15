@@ -238,7 +238,7 @@ const MapWrite: FC<MapWriteProps> = ({
     currentDeveloperObject,
     currentObjectMapping
   )
-  const missingRequiredField = getMissingRequiredCRMFields(
+  const missingRequiredFields = getMissingRequiredCRMFields(
     currentUserObject,
     currentObjectMapping
   )
@@ -246,9 +246,11 @@ const MapWrite: FC<MapWriteProps> = ({
   const doneButton = (
     <Button
       text='Done'
-      type={isMappingComplete && !missingRequiredField ? 'primary' : 'disabled'}
+      type={
+        isMappingComplete && !missingRequiredFields ? 'primary' : 'disabled'
+      }
       onClick={() => {
-        if (isMappingComplete && !missingRequiredField) {
+        if (isMappingComplete && !missingRequiredFields) {
           updateMapping(currentObjectMapping, objectMappings, setObjectMappings)
           setCurrentStage(MappingStages.Mappings)
         }
@@ -260,14 +262,18 @@ const MapWrite: FC<MapWriteProps> = ({
     doneButtonWithTooltip = (
       <Tooltip text={`Mapping needs to be completed`}>{doneButton}</Tooltip>
     )
-  } else if (missingRequiredField) {
+  } else if (missingRequiredFields) {
     const eventLabel = currentDeveloperObject.events?.find(
-      (event) => event.slug === missingRequiredField.eventSlug
+      (event) => event.slug === missingRequiredFields.eventSlug
     )?.label
     if (eventLabel) {
       doneButtonWithTooltip = (
         <Tooltip
-          text={`${eventLabel}: Field '${missingRequiredField.missingFieldLabel}' from ${currentDeveloperObject.label} in your CRM must be mapped`}
+          text={`${eventLabel}: Following fields from ${
+            currentDeveloperObject.label
+          } in your CRM must be mapped:\n${missingRequiredFields.missingFieldLabels
+            .map((label) => `'${label}'`)
+            .join('\n')}`}
         >
           {doneButton}
         </Tooltip>

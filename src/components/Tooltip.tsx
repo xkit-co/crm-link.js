@@ -48,6 +48,7 @@ const Tooltip: FC<TooltipProps> = ({ text, children, className = '' }) => {
           'text-sm',
           'bg-neutral-700',
           'text-white',
+          'whitespace-pre-line',
           'rounded',
           'w-max',
           'max-w-[250px]',
