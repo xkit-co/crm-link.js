@@ -790,3 +790,131 @@ const getRequiredCRMFields = (
     }
   }
 }
+
+const findSelectorByPointer = (
+  selectors: Selector[],
+  pointer: string
+): Selector | undefined => {
+  for (const selector of selectors) {
+    if (selector.pointer === pointer) {
+      return selector
+    } else if (selector.children) {
+      const foundSelector = findSelectorByPointer(selector.children, pointer)
+      if (foundSelector) {
+        return foundSelector
+      }
+    }
+  }
+  return undefined
+}
+
+export const applyRepeatedMapping = (
+  field: CRMObjectField,
+  developerObject: CRMObject,
+  selectors: Selector[],
+  value: string,
+  type: string,
+  objectMappings: ObjectMapping[],
+  currentObjectMapping: ObjectMapping
+) => {
+  // We're going to modify the currentObjectMapping, so let's keep an empirical object mapping we can use to check the actual state
+  const objectMappingToCheck = objectMappings.find(
+    (objectMapping) =>
+      objectMapping.api_object_id === currentObjectMapping.api_object_id &&
+      objectMapping.crm_object_id === currentObjectMapping.crm_object_id
+  )
+  if (!objectMappingToCheck) {
+    return currentObjectMapping
+  }
+  /* For actions that exist, if there's a payload field with the same slug and type:
+   * - For search actions, if there's an existing transformation created by default (associated to a field, 'direct' transformation,
+   * 'eq' operator, no source_pointer), we will pass the same source_pointer value for a repeated mapping
+   * - For create and update actions, if there's no transformation associated with that field, we will pre-fill it with the same
+   * transformation value for a repeated mapping
+   */
+  for (const eventAction of objectMappingToCheck.event_actions) {
+    const event = developerObject.events?.find(
+      (event) => event.slug === eventAction.event.slug
+    )
+    if (event) {
+      const repeatedField = event.fields.find(
+        (payloadField) =>
+          payloadField.slug === field.slug &&
+          payloadField.simple_type.type === field.simple_type.type &&
+          payloadField.simple_type.format === field.simple_type.format
+      )
+      if (repeatedField) {
+        const transformationIndex = getTransformationIndex(
+          repeatedField.slug,
+          eventAction.transformations
+        )
+        if (
+          transformationIndex > -1 &&
+          eventAction.action_type === 'search' &&
+          type !== 'empty'
+        ) {
+          const transformation =
+            eventAction.transformations[transformationIndex]
+          if (
+            transformation.name === 'direct' &&
+            transformation.criteria_operator === 'eq' &&
+            transformation.field &&
+            transformation.field.slug === repeatedField.slug &&
+            !transformation.source_pointer
+          ) {
+            const selector = findSelectorByPointer(selectors, value)
+            if (
+              selector &&
+              isOperationAllowed(selector, SelectorOperation.Filter)
+            ) {
+              const eventActionToModify =
+                currentObjectMapping.event_actions.find(
+                  (action) => action.event.slug === eventAction.event.slug
+                )
+              if (eventActionToModify) {
+                const transformationToModify =
+                  eventActionToModify.transformations.find(
+                    (transformation) =>
+                      transformation.field &&
+                      transformation.field.slug === repeatedField.slug
+                  )
+                if (transformationToModify) {
+                  transformationToModify.name = 'direct'
+                  transformationToModify.criteria_operator = 'eq'
+                  transformationToModify.source_pointer = value
+                }
+              }
+            }
+          }
+        } else if (
+          !(transformationIndex > -1) &&
+          (eventAction.action_type === 'create' ||
+            eventAction.action_type === 'update')
+        ) {
+          let operation: SelectorOperation = SelectorOperation.None
+          if (eventAction.action_type === 'create') {
+            operation = SelectorOperation.Create
+          } else if (eventAction.action_type === 'update') {
+            operation = SelectorOperation.Update
+          }
+          const selector = findSelectorByPointer(selectors, value)
+          if (selector && isOperationAllowed(selector, operation)) {
+            const transformation: Transformation = {
+              field: { slug: repeatedField.slug },
+              name: type
+            }
+            if (type !== 'empty') {
+              transformation.source_pointer = value
+            }
+            const eventActionToModify = currentObjectMapping.event_actions.find(
+              (action) => action.event.slug === eventAction.event.slug
+            )
+            if (eventActionToModify) {
+              eventActionToModify.transformations.push(transformation)
+            }
+          }
+        }
+      }
+    }
+  }
+}

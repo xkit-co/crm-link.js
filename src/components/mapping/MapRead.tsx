@@ -1,5 +1,6 @@
 import React, { FC } from 'react'
 import {
+  applyRepeatedMapping,
   getTransformationIndex,
   isReadSelected,
   updateMapping
@@ -98,13 +99,17 @@ const MapRead: FC<MapReadProps> = ({
                       currentObjectMapping.transformations
                     )
                     const modifyFieldTransformations = (
-                      modification: (transformations: Transformation[]) => void
+                      modification: (transformations: Transformation[]) => void,
+                      callback?: (objectMapping: ObjectMapping) => void
                     ) => {
                       const clonedObjectMapping =
                         window.structuredClone<ObjectMapping>(
                           currentObjectMapping
                         )
                       modification(clonedObjectMapping.transformations)
+                      if (callback) {
+                        callback(clonedObjectMapping)
+                      }
                       setCurrentObjectMapping(clonedObjectMapping)
                     }
                     return (
@@ -153,14 +158,31 @@ const MapRead: FC<MapReadProps> = ({
                               break
                           }
 
-                          modifyFieldTransformations((transformations) => {
-                            if (existingFieldIndex > -1) {
-                              transformations[existingFieldIndex] =
-                                transformation
-                            } else {
-                              transformations.push(transformation)
+                          modifyFieldTransformations(
+                            (transformations) => {
+                              if (existingFieldIndex > -1) {
+                                transformations[existingFieldIndex] =
+                                  transformation
+                              } else {
+                                transformations.push(transformation)
+                              }
+                            },
+                            (currentObjectMapping) => {
+                              if (type !== 'static') {
+                                applyRepeatedMapping(
+                                  field,
+                                  developerObjects[currentDeveloperObjectIndex],
+                                  currentUserObject.selector
+                                    ? [currentUserObject.selector]
+                                    : [],
+                                  value as string,
+                                  type,
+                                  objectMappings,
+                                  currentObjectMapping
+                                )
+                              }
                             }
-                          })
+                          )
                         }}
                         onFieldRemove={(slug) => {
                           const transformationIndex = getTransformationIndex(
