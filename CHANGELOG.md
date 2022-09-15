@@ -3,7 +3,7 @@
 - Mapping fields from the CRM are restricted by their properties of being readable, creatable, updatable and searchable in their appropriate context
 - Fields that are marked as required for creating a CRM record are mandated to be mapped for `create` actions
 
-![Preview](https://user-images.githubusercontent.com/110259385/190111678-ec330fe4-df31-4169-8624-472e11b491ef.gif)
+![Preview](https://user-images.githubusercontent.com/110259385/190345050-1041f0c8-77d8-44fd-86d9-209dbd29e355.gif)
 
 ### 2.10.6
 
