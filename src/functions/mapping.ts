@@ -351,6 +351,9 @@ export const getSelectableCriteria = (
   if (!option.selector) {
     return undefined
   }
+  if (!option.selector.pointer) {
+    return undefined
+  }
   if (!isOperationAllowed(option.selector, operation)) {
     return undefined
   }
